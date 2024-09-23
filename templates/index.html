@@ -9,8 +9,15 @@
 <body>
     <h1>Exercise Generator</h1>
     <form action="/" method="post">
-        <h3>Prompt</h3>
-        <input type="text" name="Prompt" id="prompt" autofocus>
+        <label for="prompt">Prompt</label>
+        <input type="text" name="prompt" id="prompt" autofocus>
+        <label for="model">Model</label>
+        <select name="model" id="model" class="decorated">
+          <option value="gpt-4o">🤖 ChatGPT 4o</option>
+          <option value="gpt-4o-mini" selected="selected">🤖 ChatGPT 4o-mini</option>
+          <option value="o1-preview">🔒 ChatGPT o1-preview</option>
+          <option value="o1-mini">🔒 ChatGPT o1-mini</option>
+        </select>
         <input type="submit" value="Send prompt">
         <h3>Output</h3>
         <section id="output">{{ output|safe }}</section>
