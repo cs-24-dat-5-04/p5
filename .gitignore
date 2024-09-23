@@ -163,3 +163,4 @@ cython_debug/
 
 # API keys and stuff
 secrets.json
+server.py
