@@ -9,7 +9,8 @@ app = Flask(__name__)
 def hello():
     output = "Hello! How can I assist you today?"
     if request.method == 'POST':
-        prompt = request.form['Prompt']
+        prompt = request.form['prompt']
+        model = request.form['model']
         with open('secrets.json', 'r') as file:
             secrets = json.load(file)
 
@@ -20,7 +21,7 @@ def hello():
         )
 
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model,
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {
