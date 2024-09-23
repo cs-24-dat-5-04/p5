@@ -11,6 +11,7 @@ def hello():
     if request.method == 'POST':
         prompt = request.form['prompt']
         model = request.form['model']
+        max_tokens = request.form['max_tokens']
         with open('secrets.json', 'r') as file:
             secrets = json.load(file)
 
@@ -29,7 +30,7 @@ def hello():
                     "content": prompt
                 }
             ],
-            max_tokens = 50
+            max_tokens = max_tokens
         )
         output = markdown.markdown(completion.choices[0].message.content)
     return render_template("index.html", output=output)
