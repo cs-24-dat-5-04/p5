@@ -16,7 +16,7 @@ winget install Python.Python.3.12
 winget install Git.Git
 ```
 ```
-pip install Flask
+pip install flask openai markdown
 ```
 
 ##### Install using [chocolatey](https://chocolatey.org/install)
@@ -30,7 +30,7 @@ choco install python
 choco install git
 ```
 ```
-pip install Flask
+pip install flask openai markdown
 ```
 
 ### Setup guide

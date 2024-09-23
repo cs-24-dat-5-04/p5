@@ -4,14 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>p5</title>
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
+    <h1>Exercise Generator</h1>
     <form action="/" method="post">
         <h3>Prompt</h3>
-        <input type="text" name="Prompt" id="prompt">
+        <input type="text" name="Prompt" id="prompt" autofocus>
         <input type="submit" value="Send prompt">
+        <h3>Output</h3>
+        <section id="output">{{ output|safe }}</section>
     </form>
-    <h3>Output</h3>
-    <p id="output">{{ output }}</p>    
 </body>
 </html>

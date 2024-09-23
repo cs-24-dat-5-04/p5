@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+
+* {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    font-family: 'IBM Plex Mono', sans-serif;
+    color: white;
+}
+
+body {
+    background-color: #111;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    width: 50vw;
+    margin-left: 25vw;
+}
+
+input {
+    padding: 1rem;
+    margin: 0.5rem 0;
+    border: 2px solid white;
+    border-radius: 0.5rem;
+    background-color: black;
+    font-size: 1.25rem;
+}
+h1 {
+    font-size: 2.25rem;
+    font-weight: 400;
+    margin: 1rem;
+    width: 100%;
+    text-align: center;
+}
+h3 {
+    font-size: 1.5rem;
+    margin-top: 1rem;
+}
+section#output {
+    background-color: #333;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-width: 25vw;
+    max-width: 50vw;
+    margin-top: 0.5rem;
+    color: #ddd;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 1rem;
+}
+section#output * {
+    color: #ddd;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 1rem;
+    padding: 0.5rem;
+    line-height: 1;
+}
+
+input[type=submit] {
+    background-color: white;
+    border: 0;
+    color: black;
+    font-weight: 900;
+    font-style: normal;
+}
+
+input:focus {
+    outline: none;
+}
+
+ul, ol {
+    list-style-position: inside;
+}

@@ -1,16 +1,15 @@
 from flask import Flask, render_template, request
 from openai import OpenAI
+import markdown
 import json
 
 app = Flask(__name__)
-
 @app.route('/', methods=['GET', 'POST'])
 
 def hello():
-    output = ""  # Initialize output variable
+    output = "Hello! How can I assist you today?"
     if request.method == 'POST':
-        prompt = request.form['Prompt']  # Get the prompt from the form
-        # Generate a response based on the prompt (this is just an example)
+        prompt = request.form['Prompt']
         with open('secrets.json', 'r') as file:
             secrets = json.load(file)
 
@@ -31,9 +30,8 @@ def hello():
             ],
             max_tokens = 50
         )
-        output = completion.choices[0].message.content
-    
-    return render_template("index.html", output=output)  # Pass output to template
+        output = markdown.markdown(completion.choices[0].message.content)
+    return render_template("index.html", output=output)
 
 if __name__ == '__main__':
    app.run(debug=True)
