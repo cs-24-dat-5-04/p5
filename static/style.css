@@ -22,13 +22,11 @@ input, select {
     margin: 0.5rem 0;
     border: 2px solid white;
     border-radius: 0.5rem;
-    background-color: black;
+    background-color: #111;
     font-size: 1.25rem;
 }
 select:hover {
     cursor: pointer;
-}
-input:hover, select:hover {
     background-color: #222;
 }
 h1 {
