@@ -41,3 +41,26 @@ pip install flask openai markdown
  ```
 3. Open the **📁p5 folder** in VSCode
 4. Run `server.py` and go to http://127.0.0.1:5000/
+
+
+## How to set up the Database
+1. Open your terminal and head to the **Datafiles** folder.
+
+2. Run `Databasy.py` using python to create and populate the database.
+
+## Reading database
+### Prerequisite
+ - DB browser for SQlite
+
+ 1. download and install from https://sqlitebrowser.org/dl/.
+### running DB
+ 
+ - Open DB browser for SQLite
+
+ - Press Open database
+
+ - Navigate to the Datafiles folder
+
+ - Open using DB browser
+
+ - Refresh anytime you change the DB in code to see updates.
