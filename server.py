@@ -3,7 +3,7 @@ from openai import OpenAI
 import markdown
 import json
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='app/templates', static_folder='app/static')
 @app.route('/', methods=['GET', 'POST'])
 
 def hello():

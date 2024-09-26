@@ -7,6 +7,5 @@ class Test_TestIncrementDecrement(unittest.TestCase):
     def test_decrement(self):
         self.assertEqual(3, 4)
 
-
 if __name__ == '__main__':
     unittest.main()

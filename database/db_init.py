@@ -1,9 +1,8 @@
 import sqlite3
 
-
-#Creates the database, then clears any previous tables and creates a new set.
-Db = sqlite3.connect("Database.db")
-cur = Db.cursor()
+# Creates the database, then clears any previous tables and creates a new set.
+db = sqlite3.connect("database.db")
+cur = db.cursor()
 
 cur.execute("DROP TABLE IF EXISTS semester")
 cur.execute("DROP TABLE IF EXISTS course")
@@ -15,8 +14,8 @@ cur.execute("CREATE TABLE IF NOT EXISTS course(course_id PRIMARY KEY, lessons, s
 cur.execute("CREATE TABLE IF NOT EXISTS lesson(lesson_id NOT NULL, exercise_num, course_id NOT NULL, FOREIGN KEY (course_id) REFERENCES course(course_id))")
 cur.execute("CREATE TABLE IF NOT EXISTS exercise(exercise_id NOT NULL, text NOT NULL, answer NOT NULL, lesson_id NOT NULL, course_id NOT NULL, FOREIGN KEY (lesson_id) REFERENCES lesson(lesson_id), FOREIGN KEY (course_id) REFERENCES course(course_id))")
 
-
-#Populates database ##Currently just preliminary data for testing purposes
+# Populates database
+# Currently just preliminary data for testing purposes
 cur.execute("INSERT INTO semester VALUES (5)")
 cur.execute("INSERT INTO course VALUES ('MI', 10, 5),('ASE', 12, 5),('DBS', 11, 5)")
 cur.execute("INSERT INTO lesson VALUES (1, 4, 'MI'),(1, 4, 'ASE'),(1, 4, 'DBS')")
