@@ -10,7 +10,7 @@ import markdown
 import json
 
 app = Flask(__name__)
-engine = create_engine('sqlite:///../database/database.db', echo=True)
+engine = create_engine('sqlite:///../database.db', echo=True)
 Base = declarative_base()
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
