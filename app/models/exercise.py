@@ -7,8 +7,8 @@ class Exercise(Base):
     __tablename__ = 'exercise'
     
     exercise_id = Column(Integer, primary_key=True)
-    content = Column(Text, nullable=False)
-    solution = Column(Text, nullable=False)
+    content = Column(nullable=True)
+    solution = Column(nullable=True)
     lesson_id = Column(Integer, ForeignKey('lesson.lesson_id'), nullable=False)
     
     lesson = relationship('Lesson', back_populates='exercises')
