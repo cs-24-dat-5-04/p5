@@ -50,7 +50,6 @@ CREATE TABLE system_prompt (
 );
 CREATE TABLE prompt (
     prompt_id INTEGER PRIMARY KEY,
-    system_prompt TEXT NOT NULL,
     user_prompt TEXT NOT NULL,
     completion TEXT,
     fine_tuning_id INTEGER,
