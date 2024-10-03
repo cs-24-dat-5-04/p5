@@ -10,15 +10,13 @@ import markdown
 import json
 
 app = Flask(__name__)
-engine = create_engine('sqlite:///../database.db', echo=True)
+engine = create_engine('sqlite:///./database.db', echo=True)
 Base = declarative_base()
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
 @app.route('/', methods=['GET', 'POST'])
-
-
 
 def hello():
     output = "Hello! How can I assist you today?"
@@ -68,7 +66,6 @@ def save_user_prompt(prompt_id):
     session.add(new_user_prompt)
     session.commit
     return new_user_prompt.user_prompt
-
 
 if __name__ == '__main__':
    app.run(debug=True)
