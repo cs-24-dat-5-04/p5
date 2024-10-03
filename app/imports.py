@@ -25,7 +25,7 @@ def hello():
     if request.method == 'POST':
         prompt = request.form['prompt']
         model = request.form['model']
-        with open('../secrets.json', 'r') as file:
+        with open('secrets.json', 'r') as file:
             secrets = json.load(file)
 
         client = OpenAI(
