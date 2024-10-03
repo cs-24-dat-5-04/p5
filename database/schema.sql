@@ -22,6 +22,7 @@ CREATE TABLE course (
 
 CREATE TABLE lesson (
     lesson_id INTEGER PRIMARY KEY,
+    lesson_name TEXT,
     lesson_number INTEGER NOT NULL,
     course_id INTEGER NOT NULL,
     FOREIGN KEY (course_id) REFERENCES course(course_id)
@@ -37,10 +38,6 @@ CREATE TABLE exercise (
 );
 
 -- ChatGPT-specific tables
-CREATE TABLE fine_tuning (
-    fine_tuning_id INTEGER PRIMARY KEY,
-    fine_tuning_name TEXT NOT NULL
-);
 
 CREATE TABLE system_prompt (
     system_prompt_id INTEGER PRIMARY KEY,
@@ -48,11 +45,13 @@ CREATE TABLE system_prompt (
     lesson_id INTEGER NOT NULL,
     FOREIGN KEY (lesson_id) REFERENCES lesson(lesson_id)
 );
+
 CREATE TABLE prompt (
     prompt_id INTEGER PRIMARY KEY,
     user_prompt TEXT NOT NULL,
     completion TEXT,
+    exercise_id INTEGER,
     fine_tuning_id INTEGER,
+    FOREIGN KEY (exercise_id) REFERENCES exercise(exercise_id),
     FOREIGN KEY (fine_tuning_id) REFERENCES fine_tuning(fine_tuning_id)
 );
-
