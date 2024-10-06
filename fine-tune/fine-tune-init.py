@@ -17,10 +17,10 @@ training_file_name = "finetune_dataset_demo"
 
 # Convert db to jsonl
 try:
-    db = sqlite3.connect("fine-tune/demo_database1.db")
+    db = sqlite3.connect("fine-tune/database_name.db")
     cur = db.cursor()
 
-    cur.execute("SELECT * from demo")
+    cur.execute("SELECT * from table_name")
     rows = cur.fetchall()
 
     data = []
