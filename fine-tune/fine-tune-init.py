@@ -35,7 +35,6 @@ try:
             file.write("\n")
 except Exception as e:
     print("An error has occured: ", e)
-    
 
 # Uploading training file
 training_data = client.files.create(
@@ -51,6 +50,7 @@ response = client.fine_tuning.jobs.create(
 )
 print(f"Fine-tunning model ID: {response.id} \nFine-tunning model Status: {response.status} \n")
 
+# Check status
 status = client.fine_tuning.jobs.retrieve(response.id).status
 while status != "succeeded" or status != "failed":
     time.sleep(5)
