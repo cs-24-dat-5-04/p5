@@ -33,6 +33,8 @@ try:
         for data_line in data:
             json.dump(data_line, file)
             file.write("\n")
+    
+    db.close()
 except Exception as e:
     print("An error has occured: ", e)
 
@@ -52,7 +54,7 @@ print(f"Fine-tunning model ID: {response.id} \nFine-tunning model Status: {respo
 
 # Check status
 status = client.fine_tuning.jobs.retrieve(response.id).status
-while status != "succeeded" or status != "failed":
+while not status == "succeeded" or status == "failed":
     time.sleep(5)
     status = client.fine_tuning.jobs.retrieve(response.id).status
     print(f"Status: {status}")
