@@ -9,4 +9,5 @@ class Semester(Base):
     semester_year = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
     semester_name = Column(primary_key=True, nullable=False)
     
-    courses = relationship('Course', back_populates='semester')
+    def str(self):
+        return f"{self.semester_year} - {self.semester_name}"
