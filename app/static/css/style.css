@@ -9,6 +9,25 @@
 body {
     background-color: #111;
 }
+header {
+    padding: 1rem;
+    margin: auto;
+}
+nav {
+    display: flex;
+    flex-direction: column;
+}
+nav a {
+    padding: 0.5rem;
+    color: #ccc;
+}
+a.active {
+    font-weight: 700;
+    color: white;
+}
+a:hover {
+    color: white;
+}
 form {
     display: flex;
     flex-direction: column;
@@ -37,6 +56,12 @@ h1 {
     margin: 1rem;
     width: 100%;
     text-align: center;
+}
+h2 {
+    margin: 1rem;
+    width: 100%;
+    text-align: center;
+    font-size: 1.75rem;
 }
 h3 {
     margin-top: 2rem;
@@ -82,4 +107,29 @@ input:focus {
 }
 ul, ol {
     list-style-position: inside;
+}
+
+.item-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+}
+
+.item-selector li {
+    list-style: none;
+}
+
+footer {
+    position: absolute;
+    bottom: 0;
+    margin: 1rem;
+    width: 100%;
+}
+
+footer p {
+    margin: auto;
+    text-align: center;
+    font-style: italic;
 }

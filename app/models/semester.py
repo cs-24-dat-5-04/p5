@@ -1,13 +1,14 @@
-from sqlalchemy import Column, Integer, Text
+from sqlalchemy import Column, Integer, Text, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship, declarative_base
-
-Base = declarative_base()
+from .base import Base
 
 class Semester(Base):
     __tablename__ = 'semester'
+    semester_id = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
+    semester_year = Column(Integer, nullable=False)
+    semester_name = Column(Text, nullable=False)
     
-    semester_year = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
-    semester_name = Column(primary_key=True, nullable=False)
+    courses = relationship('Course', back_populates='semester')
     
-    def str(self):
-        return f"{self.semester_year} - {self.semester_name}"
+    def __repr__(self):
+        return f"{self.semester_year}-{self.semester_name}"

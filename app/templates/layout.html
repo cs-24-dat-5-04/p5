@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Exercise calculator{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('dashboard') }}" class="{% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
+            <a href="{{ url_for('semester') }}" class="{% if active_page == 'semester' %}active{% endif %}">Semesters</a>
+            <a href="{{ url_for('course') }}" class="{% if active_page == 'course' %}active{% endif %}">Courses</a>
+            <a href="{{ url_for('exercise') }}" class="{% if active_page == 'exercise' %}active{% endif %}">Exercises</a>
+            <a href="{{ url_for('prompt') }}" class="{% if active_page == 'prompt' %}active{% endif %}">Prompts</a>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>Aalborg University 2024</p>
+        <p>Group cs-24-dat-5-04</p>
+    </footer>
+</body>
+</html>

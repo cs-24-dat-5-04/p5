@@ -1,13 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>p5</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <h1>Create Semester</h1>
+{% extends "layout.html" %}
+
+{% block title %}Semesters{% endblock %}
+
+{% block content %}
+    <h1>Semesters</h1>
+    <ul class="item-selector">
+        {% for semester in semester_list %}
+            <li>
+                <a href="{{ url_for('show_semester', semester_id=semester.semester_id) }}">
+                    {{semester}}
+                </a>
+            </li>
+        {% else %}
+            <li>No semesters found.</li>
+        {% endfor %}
+    </ul>
+    <h2>New Semester</h2>
     <form method="post">
         {{ form.csrf_token }}
         {{ form.name.label }}
@@ -16,5 +24,4 @@
         {{ form.year }}
         {{ form.submit() }}
     </form>
-</body>
-</html>
+{% endblock %}

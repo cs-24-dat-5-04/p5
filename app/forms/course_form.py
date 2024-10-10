@@ -20,20 +20,11 @@ class CourseForm(FlaskForm):
                 )
         ]
     )
-    lessons = IntegerField(
-        'Number of lessons',
-        validators=[
-            NumberRange(
-                min=1,
-                max=24,
-                message="You must have at least one lecture and can't have more than 24"
-            )
-        ]
-    )
+
     semester = QuerySelectField(
         'Semester',
         query_factory=lambda: semester.query.all(),
-        get_label='str',
-        allow_blank=False   
+        get_label='__repr__',
+        allow_blank=False
     )
     submit = SubmitField()

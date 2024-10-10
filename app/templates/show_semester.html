@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}Semesters{% endblock %}
+
+{% block content %}
+<h1>Courses in {{ semester.semester_year }}-{{ semester.semester_name }}</h1>
+
+<ul class="item-selector">
+    {% for course in course_list %}
+        <li>
+            {{course}}
+        </li>
+    {% else %}
+        <li>No courses found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
