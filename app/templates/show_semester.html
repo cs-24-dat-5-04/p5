@@ -8,10 +8,19 @@
 <ul class="item-selector">
     {% for course in course_list %}
         <li>
-            {{course}}
+            <a href="{{ url_for('show_course', semester_id=semester.semester_id, course_id=course.course_id) }}">
+                {{course}}
+            </a>
         </li>
     {% else %}
         <li>No courses found.</li>
     {% endfor %}
 </ul>
+<h2>New course</h2>
+<form method="post">
+    {{ form.csrf_token }}
+    {{ form.name.label }}
+    {{ form.name }}
+    {{ form.submit() }}
+</form>
 {% endblock %}

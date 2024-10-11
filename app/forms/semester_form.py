@@ -4,7 +4,7 @@ from wtforms.validators import DataRequired, NumberRange, Length, Regexp
 
 class SemesterForm(FlaskForm):
     name = StringField(
-        'name',
+        'Name',
         validators=[
             DataRequired(),
             Length(
