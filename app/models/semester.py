@@ -7,7 +7,7 @@ class Semester(Base):
     semester_id = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
     semester_name = Column(Text, nullable=False)
     
-    courses = relationship('Course', back_populates='semester')
+    courses = relationship('Course', back_populates='semester', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f"{self.semester_name}"

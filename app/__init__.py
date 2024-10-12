@@ -90,7 +90,7 @@ def show_semester(semester_id):
     
 @app.route('/course', methods=['GET', 'POST'])
 def course():
-    course_list = session.query(Course).all()
+    course_list = session.query(Course, Semester).join(Semester, Course.semester_id == Semester.semester_id).all()
     return render_template('course.html', course_list=course_list, active_page='course')
 
 @app.route('/semester/<int:semester_id>/course/<int:course_id>', methods=['GET', 'POST'])
@@ -142,11 +142,40 @@ def create_course():
     semester_id = request.form.get('semester_id')
     semester = session.query(Semester).filter_by(semester_id=semester_id).first()
     course = Course(course_name=course_name, course_year=course_year, semester=semester)
-    session.add(course)
+    if semester:
+        session.add(course)
+        session.commit()
+    return redirect(request.referrer)
+
+@app.route('/delete_semester', methods=['POST'])
+def delete_semester():
+    semester_id = request.form.get('semester_id')
+    semester = session.query(Semester).get(semester_id)
+    
+    if semester:
+        session.delete(semester)
+        session.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/save_semester', methods=['POST'])
+def save_semester():
+    semester_id = request.form.get('semester_id')
+    new_name = request.form.get('new_name')
+    semester = session.query(Semester).get(semester_id)
+    if semester:
+        semester.semester_name = new_name
+        session.commit()
+    return redirect(request.referrer)
+
+@app.route('/create_semester', methods=['POST'])
+def create_semester():
+    semester_name = request.form.get('semester_name')
+    semester = Semester(semester_name = semester_name)
+    session.add(semester)
     session.commit()
     return redirect(request.referrer)
 
+
 if __name__ == '__main__':
    app.run(debug=True)
-   
-   
