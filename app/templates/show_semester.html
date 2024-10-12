@@ -3,24 +3,34 @@
 {% block title %}Semesters{% endblock %}
 
 {% block content %}
-<h1>Courses in {{ semester.semester_year }}-{{ semester.semester_name }}</h1>
+<h1>Courses in {{ semester.semester_name }}</h1>
+<div class="swiper">
+    <form action="{{ url_for('show_semester', semester_id=semester.semester_id) }}" method="get">
+        <input type="hidden" name="year" value="{{ course_year - 1 }}">
+        <button type="submit" title="Previous year"><span class="material-icons">chevron_left</span></button>
+    </form>
+    <h3 class="title">{{ course_year }}</h3>
+    <form action="{{ url_for('show_semester', semester_id=semester.semester_id) }}" method="get">
+        <input type="hidden" name="year" value="{{ course_year + 1 }}">
+        <button type="submit" title="Next year"><span class="material-icons">chevron_right</span></button>
+    </form>
+</div>
+<div class="centered">
+    <ol class="crud">
+        {% for course in course_list %}
+            <li data-item-id="{{ course.course_id }}" data-item-type="course">
+                <a class="name" title="View {{course}}" href="{{ url_for('show_course', semester_id=semester.semester_id, course_id=course.course_id) }}">
+                    {{course}}
+                </a>
+                <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{course}}">edit</span></button>
+                <button onclick="deleteItem(event)"><span class="material-icons delete" title="Delete {{course}}">delete</span></button>
+            </li>
+        {% else %}
+            <li class="empty"><p>No courses found.</p></li>
+        {% endfor %}
+        <li class="create" title="Create course"><button onclick="createCourse(event, '{{ course_year }}', '{{ semester.semester_id }}')"><span class="material-icons">add</span></button></li>
+    </ol>
+</div>
 
-<ul class="item-selector">
-    {% for course in course_list %}
-        <li>
-            <a href="{{ url_for('show_course', semester_id=semester.semester_id, course_id=course.course_id) }}">
-                {{course}}
-            </a>
-        </li>
-    {% else %}
-        <li>No courses found.</li>
-    {% endfor %}
-</ul>
-<h2>New course</h2>
-<form method="post">
-    {{ form.csrf_token }}
-    {{ form.name.label }}
-    {{ form.name }}
-    {{ form.submit() }}
-</form>
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 {% endblock %}

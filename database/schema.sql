@@ -9,13 +9,13 @@ DROP TABLE IF EXISTS semester;
 -- University-specific tables
 CREATE TABLE semester (
     semester_id INTEGER PRIMARY KEY,
-    semester_year INTEGER NOT NULL,
     semester_name TEXT NOT NULL
 );
 
 CREATE TABLE course (
     course_id INTEGER PRIMARY KEY,
     course_name TEXT NOT NULL,
+    course_year INTEGER NOT NULL,
     semester_id INTEGER NOT NULL,
     FOREIGN KEY (semester_id) REFERENCES semester(semester_id)
 );

@@ -17,14 +17,4 @@ class SemesterForm(FlaskForm):
             )
         ]
     )
-    year = IntegerField(
-        'year',
-        validators=[
-            DataRequired(),
-            NumberRange(
-                min=1890,
-                max=2100,
-                message="Year must be between 1890 and 2100"),
-        ]
-    )
     submit = SubmitField()

@@ -4,7 +4,7 @@
 
 {% block content %}
     <h1>Semesters</h1>
-    <ul class="item-selector">
+    <ul class="selector">
         {% for semester in semester_list %}
             <li>
                 <a href="{{ url_for('show_semester', semester_id=semester.semester_id) }}">
@@ -16,12 +16,12 @@
         {% endfor %}
     </ul>
     <h2>New Semester</h2>
-    <form method="post">
-        {{ form.csrf_token }}
-        {{ form.name.label }}
-        {{ form.name }}
-        {{ form.year.label }}
-        {{ form.year }}
-        {{ form.submit() }}
-    </form>
+    <div class="centered">
+        <form method="post">
+            {{ form.csrf_token }}
+            {{ form.name.label }}
+            {{ form.name }}
+            {{ form.submit() }}
+        </form>
+    </div>
 {% endblock %}

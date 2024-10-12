@@ -4,11 +4,22 @@
 
 {% block content %}
     <h1>Courses</h1>
-    <ul class="item-selector">
+    <ul class="selector">
         {% for course in course_list %}
             <li>{{course}}</li>
         {% else %}
             <li>No courses found.</li>
         {% endfor %}
     </ul>
+    <h2>New course</h2>
+<div class="centered">
+    <form method="post">
+        {{ form.csrf_token }}
+        {{ form.name.label }}
+        {{ form.name }}
+        {{ form.year.label }}
+        {{ form.year }}
+        {{ form.submit() }}
+    </form>
+</div>
 {% endblock %}

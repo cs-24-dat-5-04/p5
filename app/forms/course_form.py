@@ -1,7 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, SubmitField, HiddenField
 from wtforms.validators import DataRequired, NumberRange, Length, Regexp
-from app.models import semester
 
 class CourseForm(FlaskForm):
     name = StringField(
@@ -17,6 +16,16 @@ class CourseForm(FlaskForm):
                 r'^[A-Z]+$',
                 message="Name must be letters"
                 )
+        ]
+    )
+    year = IntegerField(
+        'Year',
+        validators=[
+            DataRequired(),
+            NumberRange(
+                min=1890,
+                max=2100,
+                message="Year must be between 1890 and 2100"),
         ]
     )
     

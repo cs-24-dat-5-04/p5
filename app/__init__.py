@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -65,7 +65,7 @@ def dashboard():
 def semester():
     form = SemesterForm()
     if request.method == 'POST' and form.validate_on_submit():
-        form_submission = Semester(semester_name = semester.name.data, semester_year = semester.year.data)
+        form_submission = Semester(semester_name = form.name.data)
         session.add(form_submission)
         session.commit()
     semester_list = session.query(Semester).all()
@@ -74,16 +74,17 @@ def semester():
 @app.route('/semester/<int:semester_id>', methods=['GET', 'POST'])
 def show_semester(semester_id):
     semester = session.query(Semester).filter(Semester.semester_id == semester_id).first()
-    course_list = session.query(Course).filter(Course.semester_id == semester_id)
+    course_year = request.args.get('year', default=2024, type=int)
+    course_list = session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course_year))
     
     form = CourseForm()
     if semester:
         if request.method == 'POST' and form.validate_on_submit():
-            form_submission = Course(course_name=form.name.data, semester=semester)
+            form_submission = Course(course_name=form.name.data, course_year=form.year.data, semester=semester)
             # TODO: Insert for loop for the entered number of lessons to create lesson objects and add them to the session
             session.add(form_submission)
             session.commit()
-        return render_template('show_semester.html', semester=semester, form=form, course_list=course_list)
+        return render_template('show_semester.html', semester=semester, form=form, course_list=course_list, course_year = course_year)
     else:
         return "Semester not found", 404
     
@@ -102,5 +103,50 @@ def show_course(semester_id, course_id):
 def exercise():
     return render_template('exercise.html', active_page='exercise')
 
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+
+@app.route('/delete_course', methods=['POST'])
+def delete_course():
+    course_id = request.form.get('course_id')
+    course = session.query(Course).get(course_id)
+    
+    if course:
+        session.delete(course)
+        session.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/save_course', methods=['POST'])
+def save_course():
+    course_id = request.form.get('course_id')
+    new_name = request.form.get('new_name')
+    course = session.query(Course).get(course_id)
+    if course:
+        course.course_name = new_name
+        session.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/create_course', methods=['POST'])
+def create_course():
+    course_name = request.form.get('course_name')
+    course_year = request.form.get('course_year')
+    semester_id = request.form.get('semester_id')
+    semester = session.query(Semester).filter_by(semester_id=semester_id).first()
+    course = Course(course_name=course_name, course_year=course_year, semester=semester)
+    session.add(course)
+    session.commit()
+    return redirect(request.referrer)
+
 if __name__ == '__main__':
    app.run(debug=True)
+   
+   
