@@ -12,7 +12,7 @@ class Lesson(Base):
     # system_prompt = Column(nullable=True)
 
     course = relationship('Course', back_populates='lessons')
-    # exercises = relationship('Exercise', back_populates='lesson')
+    exercises = relationship('Exercise', back_populates='lesson')
     
     def __repr__(self):
         if self.lesson_name:

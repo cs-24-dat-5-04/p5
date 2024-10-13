@@ -105,6 +105,17 @@ def show_course(semester_id, course_id):
 def exercise():
     return render_template('exercise.html', active_page='exercise')
 
+@app.route('/lesson', methods=['GET', 'POST'])
+def lesson():
+    return render_template('lesson.html', active_page='lesson')
+
+@app.route('/semester/<int:semester_id>/course/<int:course_id>/lesson/<int:lesson_number>', methods=['GET', 'POST'])
+def show_lesson(semester_id, course_id, lesson_number):
+    course = session.query(Course).filter(Course.course_id == course_id).first()
+    lesson = session.query(Lesson).filter(and_(Lesson.course_id == course_id, Lesson.lesson_number == lesson_number)).first()
+    lesson_id = lesson.lesson_id
+    exercise_list = session.query(Exercise).filter(Exercise.lesson_id == lesson.lesson_id)
+    return render_template('show_lesson.html', course=course, lesson=lesson, lesson_id=lesson_id, exercise_list=exercise_list, active_page='lesson')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -210,6 +221,41 @@ def create_lesson():
         lesson_number = 1
     lesson = Lesson(course_id = course_id, lesson_number = lesson_number)
     session.add(lesson)
+    session.commit()
+    return redirect(request.referrer)
+
+@app.route('/delete_exercise', methods=['POST'])
+def delete_exercise():
+    exercise_id = request.form.get('exercise_id')
+    exercise = session.query(Exercise).get(exercise_id)
+    
+    if exercise:
+        # TODO: Auto-decrement following lessons
+        session.delete(exercise)
+        session.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/save_exercise', methods=['POST'])
+def save_exercise():
+    exercise_id = request.form.get('exercise_id')
+    new_name = request.form.get('new_name')
+    exercise = session.query(Exercise).get(exercise_id)
+    if exercise:
+        exercise.exercise_name = new_name
+        session.commit()
+    return redirect(request.referrer)
+
+@app.route('/create_exercise', methods=['POST'])
+def create_exercise():
+    lesson_id = request.form.get('lesson_id')
+    last_exercise = session.query(Exercise).filter_by(lesson_id = lesson_id).order_by(Exercise.exercise_number.desc()).first()
+    if last_exercise:
+        exercise_number = last_exercise.exercise_number + 1
+    else:
+        exercise_number = 1
+    exercise = Exercise(lesson_id = lesson_id, exercise_number = exercise_number)
+    session.add(exercise)
     session.commit()
     return redirect(request.referrer)
 

@@ -69,6 +69,20 @@ function createSemester(event) {
     });
 }
 
+function createExercise(lesson_id) {
+    alert(lesson_id);
+    const lesson = document.createElement('input');
+    lesson.name = 'lesson_id';
+    lesson.value = lesson_id;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/create_exercise';
+    form.appendChild(lesson);
+    form.classList.add('hidden');
+    document.body.appendChild(form);
+    form.submit();
+}
+
 function createLesson(course_id) {
     const course = document.createElement('input');
     course.name = 'course_id';
@@ -80,7 +94,6 @@ function createLesson(course_id) {
     form.classList.add('hidden');
     document.body.appendChild(form);
     form.submit();
-
 }
 
 function renameItem(event) {

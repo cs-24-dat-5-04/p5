@@ -30,6 +30,7 @@ CREATE TABLE lesson (
 
 CREATE TABLE exercise (
     exercise_id INTEGER PRIMARY KEY,
+    exercise_name TEXT,
     exercise_number INTEGER NOT NULL,
     exercise_content TEXT,
     exercise_solution TEXT,
