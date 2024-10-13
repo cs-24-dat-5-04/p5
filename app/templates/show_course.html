@@ -1,16 +1,31 @@
 {% extends "layout.html" %}
 
-{% block title %}Semesters{% endblock %}
+{% block title %}Course{% endblock %}
 
 {% block content %}
-<h2>{{ course }}</h2>
-<ul class="selector">
-    {% for lesson in lesson_list %}
-            <li>
-                {{lesson}}
+<div class="centered">
+    <a href="{{ url_for('show_semester', semester_id=semester.semester_id) }}" class="card-title">{{ semester.semester_name }} {{ course.course_year }}</a>
+    {% for i in course_list %}
+        <a href="{{ url_for('show_course', semester_id=semester.semester_id, course_id=i.course_id) }}" class="course-card {% if course.course_id ==  i.course_id %}current-course{% endif %}">{{i.course_name}}</a>
+    {% endfor %}
+</div>
+<h1>Lessons</h1>
+<div class="centered">
+    <ol class="crud">
+        {% for lesson in lesson_list %}
+            <li data-item-id="{{ lesson.lesson_id }}" data-item-type="lesson">
+                <a class="name" title="View {{lesson}}" href="#">
+                    {{lesson}}
+                </a>
+                <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{lesson}}">edit</span></button>
+                <button onclick="deleteItem(event)"><span class="material-icons delete" title="Delete {{lesson}}">delete</span></button>
             </li>
         {% else %}
-            <li>No lessons found.</li>
+            <li class="empty"><p>No lessons found.</p></li>
         {% endfor %}
-</ul>
+        <li class="create" title="Create lesson"><button onclick="createLesson('{{ course.course_id }}')"><span class="material-icons">add</span></button></li>
+    </ol>
+</div>
+
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 {% endblock %}

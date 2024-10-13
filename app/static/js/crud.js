@@ -38,7 +38,7 @@ function createCourse(event, course_year, semester_id) {
         }
     });
 }
-function createSemester(event, semester_name) {
+function createSemester(event) {
     itemList = event.target.closest('ol');
     const newItem = document.createElement('li');
     const newItemInput = document.createElement('input');
@@ -68,6 +68,21 @@ function createSemester(event, semester_name) {
         }
     });
 }
+
+function createLesson(course_id) {
+    const course = document.createElement('input');
+    course.name = 'course_id';
+    course.value = course_id;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/create_lesson';
+    form.appendChild(course);
+    form.classList.add('hidden');
+    document.body.appendChild(form);
+    form.submit();
+
+}
+
 function renameItem(event) {
     item = event.target.closest('li')
     id = item.dataset.itemId;

@@ -353,3 +353,39 @@ ol.crud {
 .hidden {
     visibility: hidden;
 }
+
+.course-card {
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    background: #111;
+    color: white;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    outline: 2px solid white;
+    outline-offset: -2px;
+}
+
+.course-card:hover {
+    background-color: #222;
+    cursor: pointer;
+}
+
+.course-card.current-course {
+    background: #eee;
+    color: #111;
+    border: 0;
+    font-weight: 600;
+}
+
+.course-card.current-course:hover {
+    background: white;
+}
+
+.card-title {
+    padding: 0.5rem 0.5rem;
+    margin: 0.25rem;
+    background: #111;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+}

@@ -7,7 +7,7 @@ class Lesson(Base):
     
     lesson_id = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
     lesson_name = Column(String, nullable=True)
-    lesson_number = Column(Integer, nullable=False)
+    lesson_number = Column(Integer, autoincrement=True, nullable=False)
     course_id = Column(Integer, ForeignKey('course.course_id'), nullable=False)
     # system_prompt = Column(nullable=True)
 

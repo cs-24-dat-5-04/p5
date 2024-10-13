@@ -84,7 +84,7 @@ def show_semester(semester_id):
             # TODO: Insert for loop for the entered number of lessons to create lesson objects and add them to the session
             session.add(form_submission)
             session.commit()
-        return render_template('show_semester.html', semester=semester, form=form, course_list=course_list, course_year = course_year)
+        return render_template('show_semester.html', semester=semester, form=form, course_list=course_list, course_year = course_year, active_page='semester')
     else:
         return "Semester not found", 404
     
@@ -97,7 +97,9 @@ def course():
 def show_course(semester_id, course_id):
     course = session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_id == course_id)).first()
     lesson_list = session.query(Lesson).filter(Lesson.course_id == course_id)
-    return render_template('show_course.html', course=course, lesson_list=lesson_list, active_page='course')
+    course_list = session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course.course_year))
+    semester = session.query(Semester).filter(Semester.semester_id == semester_id).first()
+    return render_template('show_course.html', course=course, semester=semester, lesson_list=lesson_list, course_list=course_list, active_course_id=course_id)
 
 @app.route('/exercise', methods=['GET', 'POST'])
 def exercise():
@@ -112,6 +114,35 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html'), 500
+
+@app.route('/delete_semester', methods=['POST'])
+def delete_semester():
+    semester_id = request.form.get('semester_id')
+    semester = session.query(Semester).get(semester_id)
+    
+    if semester:
+        session.delete(semester)
+        session.commit()
+
+    return redirect(request.referrer)
+
+@app.route('/save_semester', methods=['POST'])
+def save_semester():
+    semester_id = request.form.get('semester_id')
+    new_name = request.form.get('new_name')
+    semester = session.query(Semester).get(semester_id)
+    if semester:
+        semester.semester_name = new_name
+        session.commit()
+    return redirect(request.referrer)
+
+@app.route('/create_semester', methods=['POST'])
+def create_semester():
+    semester_name = request.form.get('semester_name')
+    semester = Semester(semester_name = semester_name)
+    session.add(semester)
+    session.commit()
+    return redirect(request.referrer)
 
 @app.route('/delete_course', methods=['POST'])
 def delete_course():
@@ -147,35 +178,36 @@ def create_course():
         session.commit()
     return redirect(request.referrer)
 
-@app.route('/delete_semester', methods=['POST'])
-def delete_semester():
-    semester_id = request.form.get('semester_id')
-    semester = session.query(Semester).get(semester_id)
+@app.route('/delete_lesson', methods=['POST'])
+def delete_lesson():
+    lesson_id = request.form.get('lesson_id')
+    lesson = session.query(Lesson).get(lesson_id)
     
-    if semester:
-        session.delete(semester)
+    if lesson:
+        # TODO: Auto-decrement following lessons
+        session.delete(lesson)
         session.commit()
 
     return redirect(request.referrer)
 
-@app.route('/save_semester', methods=['POST'])
-def save_semester():
-    semester_id = request.form.get('semester_id')
+@app.route('/save_lesson', methods=['POST'])
+def save_lesson():
+    lesson_id = request.form.get('lesson_id')
     new_name = request.form.get('new_name')
-    semester = session.query(Semester).get(semester_id)
-    if semester:
-        semester.semester_name = new_name
+    lesson = session.query(Lesson).get(lesson_id)
+    if lesson:
+        lesson.lesson_name = new_name
         session.commit()
     return redirect(request.referrer)
 
-@app.route('/create_semester', methods=['POST'])
-def create_semester():
-    semester_name = request.form.get('semester_name')
-    semester = Semester(semester_name = semester_name)
-    session.add(semester)
+@app.route('/create_lesson', methods=['POST'])
+def create_lesson():
+    course_id = request.form.get('course_id')
+    lesson_number = session.query(Lesson).filter_by(course_id = course_id).order_by(Lesson.lesson_number.desc()).first().lesson_number + 1;
+    lesson = Lesson(course_id = course_id, lesson_number = lesson_number)
+    session.add(lesson)
     session.commit()
     return redirect(request.referrer)
-
 
 if __name__ == '__main__':
    app.run(debug=True)
