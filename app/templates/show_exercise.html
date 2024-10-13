@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+
+{% block title %}Course{% endblock %}
+
+{% block content %}
+<h1>{{ exercise }}</h1>
+<div class="centered">
+    <form class="exercise" action="/update_exercise/{{ exercise.exercise_id }}" method="POST">
+        <label for="exercise_content">Content</label>
+        <input type="text" name="exercise_content" value="{% if exercise.exercise_content != None %}{{ exercise.exercise_content }}{% endif %}">
+        <label for="exercise_solution">Solution</label>
+        <input type="text" name="exercise_solution" value="{% if exercise.exercise_solution != None %}{{ exercise.exercise_solution }}{% endif %}">
+        <input type="submit" value="Submit">
+    </form>
+</div>
+{% endblock %}

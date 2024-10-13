@@ -14,7 +14,7 @@
     <ol class="crud">
         {% for lesson in lesson_list %}
             <li data-item-id="{{ lesson.lesson_id }}" data-item-type="lesson">
-                <a class="name" title="View {{lesson}}" href="#">
+                <a class="name" title="View {{lesson}}" href="{{ url_for('show_lesson', semester_id=semester.semester_id, course_id=course.course_id, lesson_number=lesson.lesson_number) }}">
                     {{lesson}}
                 </a>
                 <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{lesson}}">edit</span></button>

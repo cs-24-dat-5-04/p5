@@ -259,5 +259,21 @@ def create_exercise():
     session.commit()
     return redirect(request.referrer)
 
+@app.route('/exercise/<int:exercise_id>', methods=['GET', 'POST'])
+def show_exercise(exercise_id):
+    exercise = session.query(Exercise).filter_by(exercise_id = exercise_id).first()
+    return render_template('show_exercise.html', exercise=exercise, active_page='exercise')
+
+@app.route('/update_exercise/<int:exercise_id>', methods=['POST'])
+def update_exercise(exercise_id):
+    exercise_content = request.form.get('exercise_content')
+    exercise_solution = request.form.get('exercise_solution')
+    exercise = session.query(Exercise).get(exercise_id)
+    if exercise:
+        exercise.exercise_content = exercise_content
+        exercise.exercise_solution = exercise_solution
+        session.commit()
+    return redirect(request.referrer)
+
 if __name__ == '__main__':
    app.run(debug=True)

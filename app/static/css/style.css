@@ -389,3 +389,19 @@ ol.crud {
     text-decoration: none;
     font-weight: 600;
 }
+
+.exercise {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.exercise input[type="text"] {
+    width: 80ch;
+    height: 6ch;
+}
+.exercise label {
+    width: 80ch;
+    align-self: center;
+    margin-left: 6ch;
+}

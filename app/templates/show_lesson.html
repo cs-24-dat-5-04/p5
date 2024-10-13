@@ -8,7 +8,7 @@
     <ol class="crud">
         {% for exercise in exercise_list %}
             <li data-item-id="{{ exercise.exercise_id }}" data-item-type="exercise">
-                <a class="name" title="View {{exercise}}" href="#">
+                <a class="name" title="View {{exercise}}" href="{{ url_for('show_exercise', exercise_id=exercise.exercise_id) }}">
                     {{ exercise }}
                 </a>
                 <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{exercise}}">edit</span></button>
