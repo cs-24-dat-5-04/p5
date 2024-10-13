@@ -203,7 +203,11 @@ def save_lesson():
 @app.route('/create_lesson', methods=['POST'])
 def create_lesson():
     course_id = request.form.get('course_id')
-    lesson_number = session.query(Lesson).filter_by(course_id = course_id).order_by(Lesson.lesson_number.desc()).first().lesson_number + 1;
+    last_lesson = session.query(Lesson).filter_by(course_id = course_id).order_by(Lesson.lesson_number.desc()).first()
+    if last_lesson:
+        lesson_number = last_lesson.lesson_number + 1
+    else:
+        lesson_number = 1
     lesson = Lesson(course_id = course_id, lesson_number = lesson_number)
     session.add(lesson)
     session.commit()
