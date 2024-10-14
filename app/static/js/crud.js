@@ -70,7 +70,6 @@ function createSemester(event) {
 }
 
 function createExercise(lesson_id) {
-    alert(lesson_id);
     const lesson = document.createElement('input');
     lesson.name = 'lesson_id';
     lesson.value = lesson_id;

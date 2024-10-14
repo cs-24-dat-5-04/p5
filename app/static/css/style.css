@@ -396,12 +396,47 @@ ol.crud {
     align-items: center;
     justify-content: center;
 }
-.exercise input[type="text"] {
-    width: 80ch;
-    height: 6ch;
+textarea {
+    background: #111;
+    color: white;
+    border: 2px solid white;
+    border-radius: 0.25rem;
+    padding: 0.25rem;
 }
 .exercise label {
-    width: 80ch;
+    width: 50ch;
     align-self: center;
-    margin-left: 6ch;
+    margin-left: 4ch;
+    padding: 0.25rem 0;
+}
+
+.exercise-proposals {
+    display: grid;
+    grid-template-columns: 50ch 6ch;
+    grid-template-rows: repeat(2ch 6ch 2ch 6ch 2ch 6ch);
+}
+
+.exercise-proposals > * {
+    background: #111;
+}
+
+.exercise-proposals label, .exercise-proposals textarea {
+    grid-column: 1 / 2;
+}
+
+.exercise-proposals button {
+    margin: 0.5rem;
+    background: #ddd;
+    border-radius: 0.25rem;
+    height: 5ch;
+    width: 5ch;
+}
+
+.exercise-proposals button:hover {
+    background-color: white;
+    cursor: pointer;
+}
+.exercise-proposals button span {
+    color: #111;
+    padding-top: 4px;
 }

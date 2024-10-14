@@ -6,11 +6,22 @@
 <h1>{{ exercise }}</h1>
 <div class="centered">
     <form class="exercise" action="/update_exercise/{{ exercise.exercise_id }}" method="POST">
-        <label for="exercise_content">Content</label>
-        <input type="text" name="exercise_content" value="{% if exercise.exercise_content != None %}{{ exercise.exercise_content }}{% endif %}">
-        <label for="exercise_solution">Solution</label>
-        <input type="text" name="exercise_solution" value="{% if exercise.exercise_solution != None %}{{ exercise.exercise_solution }}{% endif %}">
+        <label for="exercise_content">Question</label>
+        <textarea type="text" name="exercise_content" value="{% if exercise.exercise_content != None %}{{ exercise.exercise_content }}{% endif %}" rows="2" cols="50"></textarea>
+        <label for="exercise_solution">Existing solution</label>
+        <textarea type="text" name="exercise_solution" value="{% if exercise.exercise_solution != None %}{{ exercise.exercise_solution }}{% endif %}" rows="2" cols="50"></textarea>
         <input type="submit" value="Submit">
     </form>
+</div>
+<div class="exercise-proposals centered">
+    <label for="exercise_solution">Proposed solution</label>
+    <textarea readonly type="text" name="prompt_solution" value="" rows="2" cols="50"></textarea>
+    <button type="submit"><span class="material-icons">bolt</span></button>
+    <label for="exercise_solution">Proposed new question</label>
+    <textarea readonly type="text" name="prompt_new_question" value="" rows="2" cols="50"></textarea>
+    <button type="submit"><span class="material-icons">bolt</span></button>
+    <label for="exercise_solution">Proposed new solution</label>
+    <textarea readonly type="text" name="prompt_new_solution" value="" rows="2" cols="50"></textarea>
+    <button type="submit"><span class="material-icons">bolt</span></button>
 </div>
 {% endblock %}
