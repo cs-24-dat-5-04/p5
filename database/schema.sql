@@ -35,7 +35,13 @@ CREATE TABLE exercise (
     exercise_content TEXT,
     exercise_solution TEXT,
     lesson_id INTEGER NOT NULL,
-    FOREIGN KEY (lesson_id) REFERENCES lesson(lesson_id)
+    proposed_solution_id INTEGER,
+    proposed_new_question_id INTEGER,
+    proposed_new_solution_id INTEGER,
+    FOREIGN KEY (lesson_id) REFERENCES lesson(lesson_id),
+    FOREIGN KEY (proposed_solution_id) REFERENCES prompt(prompt_id),
+    FOREIGN KEY (proposed_new_question_id) REFERENCES prompt(prompt_id),
+    FOREIGN KEY (proposed_new_solution_id) REFERENCES prompt(prompt_id)
 );
 
 -- ChatGPT-specific tables

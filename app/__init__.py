@@ -3,9 +3,8 @@ from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from openai import OpenAI
-import sys
-import markdown
 import json
+
 from .forms.semester_form import SemesterForm
 from .forms.course_form import CourseForm
 
@@ -21,7 +20,42 @@ Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
-from .models import Semester, Course, Lesson, Exercise, FineTuning, Prompt
+from .models import Semester, Course, Lesson, Exercise, FineTuning, Prompt, SystemPrompt
+
+def complete(system_prompt, user_prompt):
+    model = 'gpt-4o-mini'
+    client = OpenAI(
+    organization = secrets["organization"],
+    project = secrets["project"],
+    api_key = secrets["api_key"],
+    )
+
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user","content": user_prompt},
+        ],
+        max_tokens = 200
+    )
+    return completion.choices[0].message.content
+
+@app.template_filter('get_user_prompt')
+def get_user_prompt(prompt_id):
+    prompt = session.query(Prompt).get(prompt_id)
+    return prompt.user_prompt
+
+@app.template_filter('get_prompt_completion')
+def get_prompt_completion(prompt_id):
+    prompt = session.query(Prompt).get(prompt_id)
+    return prompt.completion
+
+@app.template_filter('get_system_prompt_from_lesson')
+def get_system_prompt_from_lesson(lesson_id):
+    system_prompt = session.query(SystemPrompt).filter_by(lesson_id = lesson_id).first()
+    if system_prompt:
+        return system_prompt.system_prompt
+    return None
 
 @app.route('/', methods=['GET'])
 def index():
@@ -113,9 +147,9 @@ def lesson():
 def show_lesson(semester_id, course_id, lesson_number):
     course = session.query(Course).filter(Course.course_id == course_id).first()
     lesson = session.query(Lesson).filter(and_(Lesson.course_id == course_id, Lesson.lesson_number == lesson_number)).first()
-    lesson_id = lesson.lesson_id
     exercise_list = session.query(Exercise).filter(Exercise.lesson_id == lesson.lesson_id)
-    return render_template('show_lesson.html', course=course, lesson=lesson, lesson_id=lesson_id, exercise_list=exercise_list, active_page='lesson')
+    system_prompt = session.query(SystemPrompt).filter_by(lesson_id = lesson.lesson_id).first()
+    return render_template('show_lesson.html', course=course, lesson=lesson, lesson_id=lesson.lesson_id, exercise_list=exercise_list, system_prompt=system_prompt, active_page='lesson')
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -275,5 +309,42 @@ def update_exercise(exercise_id):
         session.commit()
     return redirect(request.referrer)
 
+@app.route('/update_system_prompt/<int:lesson_id>', methods=['POST'])
+def update_system_prompt(lesson_id):
+    content = request.form.get('system_prompt')
+    system_prompt = session.query(SystemPrompt).filter_by(lesson_id = lesson_id).first()
+    lesson = session.query(Lesson).get(lesson_id)
+    if lesson:
+        if system_prompt:
+            system_prompt.system_prompt = content
+        else:
+            system_prompt = SystemPrompt(system_prompt = content, lesson_id = lesson_id)
+            session.add(system_prompt)
+            session.flush()
+        lesson.system_prompt_id = system_prompt.system_prompt_id
+        session.commit()
+    return redirect(request.referrer)
+
+@app.route('/complete-prompt', methods=['POST'])
+def complete_prompt():
+    user_prompt = request.form.get('user_prompt')
+    system_prompt = request.form.get('system_prompt')
+    prompt_id = request.form.get('prompt_id')
+    exercise_id = request.form.get('exercise_id')
+    print(f"user_prompt: {user_prompt}, system_prompt: {system_prompt}, prompt_id: {prompt_id}, exercise_id: {exercise_id}")
+
+    if prompt_id:
+        prompt = session.query(Prompt).get(prompt_id)
+    else:
+        prompt = Prompt(user_prompt = user_prompt)
+        session.add(prompt)
+        session.flush()
+        exercise = session.query(Exercise).get(exercise_id)
+        exercise.proposed_solution_id = prompt.prompt_id
+    completion = complete(system_prompt, user_prompt)
+    prompt.completion = completion
+    session.commit()
+    return redirect(request.referrer)
+
 if __name__ == '__main__':
-   app.run(debug=True)
+    app.run(debug=True)

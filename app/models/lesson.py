@@ -9,10 +9,10 @@ class Lesson(Base):
     lesson_name = Column(String, nullable=True)
     lesson_number = Column(Integer, autoincrement=True, nullable=False)
     course_id = Column(Integer, ForeignKey('course.course_id'), nullable=False)
-    # system_prompt = Column(nullable=True)
 
     course = relationship('Course', back_populates='lessons')
     exercises = relationship('Exercise', back_populates='lesson', cascade='all, delete-orphan')
+    system_prompt = relationship('SystemPrompt', back_populates='lesson', cascade='all, delete-orphan')
     
     def __repr__(self):
         if self.lesson_name:

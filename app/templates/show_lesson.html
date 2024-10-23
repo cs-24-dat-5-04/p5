@@ -20,5 +20,13 @@
         <li class="create" title="Create exercise"><button onclick="createExercise('{{ lesson_id }}')"><span class="material-icons">add</span></button></li>
     </ol>
 </div>
+<div class="centered">
+    <form class="system_prompt_creator" action="/update_system_prompt/{{ lesson.lesson_id }}" method="POST">
+        <label for="system_prompt">System prompt</label>
+        <textarea type="text" name="system_prompt" rows="2" cols="50">{% if system_prompt.system_prompt != None %}{{ system_prompt.system_prompt }}{% endif %}</textarea>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 {% endblock %}
