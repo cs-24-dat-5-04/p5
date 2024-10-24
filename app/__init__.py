@@ -48,7 +48,10 @@ def get_user_prompt(prompt_id):
 @app.template_filter('get_prompt_completion')
 def get_prompt_completion(prompt_id):
     prompt = session.query(Prompt).get(prompt_id)
-    return prompt.completion
+    if prompt != None:
+        return prompt.completion
+    else:
+        return ''
 
 @app.template_filter('get_system_prompt_from_lesson')
 def get_system_prompt_from_lesson(lesson_id):
