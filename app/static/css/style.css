@@ -8,6 +8,9 @@
 }
 body {
     background-color: #111;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 header {
     padding: 1rem;
@@ -26,6 +29,9 @@ a.active {
 }
 a:hover {
     color: white;
+}
+main {
+    flex-grow: 1;
 }
 form {
     display: flex;
@@ -145,18 +151,6 @@ ul, ol {
     list-style: none;
 }
 
-footer {
-    position: absolute;
-    bottom: 2ch;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-footer p {
-    margin: auto;
-    text-align: center;
-    font-style: italic;
-}
 .dropdown {
     display: flex;
     justify-content: center;
@@ -263,11 +257,9 @@ ol.crud {
     display: grid;
     grid-template-columns: 6fr 1fr 1fr;
     width: 100%;
-    padding: 0.3rem 1rem 0 1rem;
+    align-items: center;
 }
-.crud .name {
-    padding-left: 0.3rem;
-}
+
 .crud li:hover {
     font-weight: 500;
 }
@@ -299,13 +291,7 @@ ol.crud {
     width: 24ch;
 }
 
-.crud .material-icons {
-    font-size: 1.25rem;
-    margin: 0;
-}
-
 .crud .create {
-    margin: 0.5rem;
     padding: 0.3rem 1rem 0 1rem;
     box-sizing: border-box;
     width: 100%;
@@ -317,8 +303,11 @@ ol.crud {
     text-align: center;
     font-weight: 500;
     color: #111;
+    height: 1.5rem;
 }
-
+.crud li button {
+    margin: 0.25rem 0;
+}
 .crud .create button > * {
     color: #111;
     font-weight: 900;
@@ -399,35 +388,37 @@ textarea {
     color: white;
     border: 2px solid white;
     border-radius: 0.25rem;
+    box-sizing: border-box;
     padding: 0.25rem;
 }
 .exercise label {
     width: 50ch;
     align-self: center;
-    margin-left: 4ch;
+    margin-left: 4ch;   
     padding: 0.25rem 0;
 }
 
 .exercise-proposals {
-    display: grid;
-    grid-template-columns: 50ch 6ch;
-    grid-template-rows: repeat(2ch 6ch 2ch 6ch 2ch 6ch);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .exercise-proposals > * {
     background: #111;
 }
 
-.exercise-proposals label, .exercise-proposals textarea {
-    grid-column: 1 / 2;
-}
-
-.exercise-proposals button {
-    margin: 0.5rem;
+button {
+    margin: 0.5rem 0;
     background: #ddd;
     border-radius: 0.25rem;
-    height: 5ch;
-    width: 5ch;
+    height: 2rem;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    width: 100%;
 }
 
 .exercise-proposals button:hover {
@@ -437,4 +428,26 @@ textarea {
 .exercise-proposals button span {
     color: #111;
     padding-top: 4px;
+}
+.proposal, .exercise {
+    width: 50ch;
+}
+.valid {
+    border-color: lime;
+}
+.invalid {
+    border-color: red;
+}
+
+footer {
+    width: 100%;
+    height: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+footer p {
+    width: max-content;
 }

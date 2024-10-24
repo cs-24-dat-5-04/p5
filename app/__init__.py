@@ -1,3 +1,4 @@
+import re
 from flask import Flask, redirect, render_template, request
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
@@ -328,26 +329,47 @@ def update_system_prompt(lesson_id):
         session.commit()
     return redirect(request.referrer)
 
-@app.route('/complete-prompt', methods=['POST'])
-def complete_prompt():
-    user_prompt = request.form.get('user_prompt')
-    system_prompt = request.form.get('system_prompt')
-    prompt_id = request.form.get('prompt_id')
-    exercise_id = request.form.get('exercise_id')
-    print(f"user_prompt: {user_prompt}, system_prompt: {system_prompt}, prompt_id: {prompt_id}, exercise_id: {exercise_id}")
-
-    if prompt_id:
+def complete_prompt(user_prompt, system_prompt, prompt_id=None):
+    if prompt_id != None:
+        print(f'Prompt ID: {prompt_id}')
         prompt = session.query(Prompt).get(prompt_id)
     else:
+        print("Prompt ID is None")
         prompt = Prompt(user_prompt = user_prompt)
         session.add(prompt)
         session.flush()
-        exercise = session.query(Exercise).get(exercise_id)
-        exercise.proposed_solution_id = prompt.prompt_id
     completion = complete(system_prompt, user_prompt)
+    print(f'Prompt: {prompt}')
     prompt.completion = completion
     session.commit()
-    return redirect(request.referrer)
+    return completion
 
+def validate_proposed_solution(question, solution, proposed_solution):
+    system_prompt = 'Only reply with "yes" or "no". Nothing else.'
+    user_prompt = f'{solution} is the solution to the question: {question}. Is {proposed_solution} also a valid solution to the question?'
+    completion = complete(system_prompt, user_prompt)
+    print(user_prompt)
+    answer = re.search(r'yes', completion, re.IGNORECASE) is not None
+    print(f'Answer: {answer}')
+    return answer
+    
+    
+@app.route('/generate_proposed_solution', methods=['POST'])
+def generate_proposed_solution():
+    user_prompt = request.form.get('user_prompt')
+    system_prompt = request.form.get('system_prompt')
+    exercise_id = request.form.get('exercise_id')
+    exercise_solution = request.form.get('exercise_solution')
+    prompt_id = request.form.get('prompt_id')
+    proposed_solution = complete_prompt(user_prompt, system_prompt, prompt_id)
+    exercise = session.query(Exercise).get(exercise_id)
+    exercise.proposed_solution_id = prompt_id
+    if validate_proposed_solution(user_prompt, exercise_solution, proposed_solution):
+        exercise.proposed_solution_validation = True
+    else:
+        exercise.proposed_solution_validation = False
+    session.commit()
+    return redirect(request.referrer)
+    
 if __name__ == '__main__':
     app.run(debug=True)
