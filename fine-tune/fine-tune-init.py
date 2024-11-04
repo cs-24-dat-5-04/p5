@@ -25,9 +25,9 @@ try:
 
     data = []
     for row in rows:
-        data.append({"messages":[{"role": "system", "content": row[0]},
-                                 {"role": "user", "content": row[1]},
-                                 {"role": "assistant", "content": row[2]}]})
+        data.append({"messages":[{"role": "system", "content": row[0]},       # 
+                                 {"role": "user", "content": row[1]},         # This is hard coded and need to be changed when integrated with the real database
+                                 {"role": "assistant", "content": row[2]}]})  #
 
     with open("fine-tune/"+training_file_name+".jsonl", "w") as file:
         for data_line in data:
@@ -48,7 +48,12 @@ print(f"Training ID: {training_data.id}")
 # Create a fine-tuned model
 response = client.fine_tuning.jobs.create(
   training_file=training_data.id, 
-  model="gpt-4o-mini-2024-07-18"
+  model="gpt-4o-mini-2024-07-18"#,
+  #hyperparameters={
+  #  "n_epochs":10,
+  #  "batch_size":1,
+  #  "learning_rate_multiplier":1.8
+  #}
 )
 print(f"Fine-tunning model ID: {response.id} \nFine-tunning model Status: {response.status} \n")
 

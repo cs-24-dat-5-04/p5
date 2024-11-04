@@ -32,4 +32,4 @@ def delete(id):
 #print(receive(job_id))
 #print(model_list())
 #print(cancel(job_id))
-print(delete(model_id))
+#print(delete(model_id))
