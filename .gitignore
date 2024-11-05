@@ -165,3 +165,7 @@ cython_debug/
 secrets.json
 server.py
 database.db
+demo_database.db
+database_name.db
+finetune_dataset_demo.jsonl
+finetune_dataset_demo1.jsonl
