@@ -330,7 +330,7 @@ def update_system_prompt(lesson_id):
     return redirect(request.referrer)
 
 def complete_prompt(user_prompt, system_prompt, prompt_id=None):
-    if prompt_id != None:
+    if prompt_id:
         print(f'Prompt ID: {prompt_id}')
         prompt = session.query(Prompt).get(prompt_id)
     else:
@@ -342,7 +342,7 @@ def complete_prompt(user_prompt, system_prompt, prompt_id=None):
     print(f'Prompt: {prompt}')
     prompt.completion = completion
     session.commit()
-    return completion
+    return completion, prompt.prompt_id
 
 def validate_proposed_solution(question, solution, proposed_solution):
     system_prompt = 'Only reply with "yes" or "no". Nothing else.'
@@ -361,7 +361,7 @@ def generate_proposed_solution():
     exercise_id = request.form.get('exercise_id')
     exercise_solution = request.form.get('exercise_solution')
     prompt_id = request.form.get('prompt_id')
-    proposed_solution = complete_prompt(user_prompt, system_prompt, prompt_id)
+    proposed_solution, prompt_id = complete_prompt(user_prompt, system_prompt, prompt_id)
     exercise = session.query(Exercise).get(exercise_id)
     exercise.proposed_solution_id = prompt_id
     if validate_proposed_solution(user_prompt, exercise_solution, proposed_solution):

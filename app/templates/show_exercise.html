@@ -16,7 +16,7 @@
 <div class="exercise-proposals centered">
     <form class="proposal" action="/generate_proposed_solution" method="POST">
         <label for="exercise_solution">Proposed solution</label>
-        <textarea class="{% if exercise.proposed_solution_validation == 1 %}valid{% else %}invalid{% endif %}" readonly type="text" name="prompt_solution" rows="2" cols="50">{% if exercise.exercise_content is not none %}{{ exercise.proposed_solution_id | get_prompt_completion() }}{% endif %}</textarea>
+        <textarea class="{% if exercise.proposed_solution_validation == 1 %}valid{% endif %}{% if exercise.proposed_solution_validation == 0 %}invalid{% endif %}" readonly type="text" name="prompt_solution" rows="2" cols="50">{% if exercise.exercise_content is not none %}{{ exercise.proposed_solution_id | get_prompt_completion() }}{% endif %}</textarea>
         <input type="hidden" name="system_prompt" value="{{ exercise.lesson_id | get_system_prompt_from_lesson() }}">
         <input type="hidden" name="user_prompt" value="{% if exercise.exercise_content is not none %}{{ exercise.exercise_content }}{% endif %}">
         <input type="hidden" name="prompt_id" value="{% if exercise.proposed_solution_id is not none %}{{ exercise.proposed_solution_id }}{% endif %}">
