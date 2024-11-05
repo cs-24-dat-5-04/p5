@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}Semesters{% endblock %}
+
+{% block content %}
+    <h1>Semesters</h1>
+    <div class="centered">
+        <ol class="crud">
+            {% for semester in semester_list %}
+                <li data-item-id="{{ semester.semester_id }}" data-item-type="semester">
+                    <a  class="name" title="View {{ semester }}" href="{{ url_for('show_semester', semester_id=semester.semester_id) }}">
+                        {{semester}}
+                    </a>
+                    <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{semester}}">edit</span></button>
+                    <button onclick="deleteItem(event)"><span class="material-icons delete" title="Delete {{semester}}">delete</span></button>
+                </li>
+            {% else %}
+                <li class="empty"><p>No semesters found.</p></li>
+            {% endfor %}
+            <li class="create" title="Create semester"><button onclick="createSemester(event, '{{ semester_name }}')"><span class="material-icons">add</span></button></li>
+        </ol>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
+{% endblock %}

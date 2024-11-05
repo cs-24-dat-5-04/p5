@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Courses{% endblock %}
+
+{% block content %}
+    <h1>Courses</h1>
+    <ul class="selector">
+        {% for course in course_list %}
+            <li>{{course[0].course_name}} ({{course[0].course_year}}-{{course[1].semester_name}})</li>
+        {% else %}
+            <li>No courses found.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

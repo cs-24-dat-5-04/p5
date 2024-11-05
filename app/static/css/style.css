@@ -8,43 +8,83 @@
 }
 body {
     background-color: #111;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+header {
+    padding: 1rem;
+    margin: auto;
+}
+nav {
+    display: flex;
+}
+nav a {
+    padding: 0.5rem;
+    color: #ccc;
+}
+a.active {
+    font-weight: 700;
+    color: white;
+}
+a:hover {
+    color: white;
+}
+main {
+    flex-grow: 1;
 }
 form {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    width: 50vw;
-    margin-left: 25vw;
+    width: 24ch;
 }
 input, select {
-    padding: 1rem;
-    margin: 0.5rem 0;
+    padding: 0.5rem;
+    margin: 0.25rem 0;
     border: 2px solid white;
     border-radius: 0.5rem;
-    background-color: black;
-    font-size: 1.25rem;
+    background-color: #111;
+    font-size: 1rem;
+    width: 100%;
 }
+label {
+    align-self: flex-start;
+}
+button, input[type="submit"] {
+    padding: 0;
+    margin: 0;
+    border: 0;
+    width: auto;
+    box-sizing: border-box;
+  }
 select:hover {
     cursor: pointer;
-}
-input:hover, select:hover {
-    background-color: #222;
 }
 h1 {
     font-size: 2.25rem;
     font-weight: 300;
-    margin: 1rem;
+    margin: 1rem 0;
     width: 100%;
     text-align: center;
+}
+h2 {
+    margin: 1rem 0;
+    width: 100%;
+    text-align: center;
+    font-size: 1.75rem;
 }
 h3 {
     margin-top: 2rem;
 }
 label {
-    font-size: 1.25rem;
-    margin-top: 1rem;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
     font-weight: 600;
+}
+.centered {
+    display: flex;
+    width: 100%;
+    justify-content: center;
 }
 section#output {
     background-color: #333;
@@ -68,18 +108,346 @@ section#output * {
 }
 input[type=submit] {
     background-color: #eee;
-    border: 0;
+    border: 2px solid #eee;
     color: black;
     font-weight: 600;
-    font-style: normal;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    width: min-content;
+    align-self: center;
 }
 input[type=submit]:hover {
     cursor: pointer;
     background-color: white;
 }
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 input:focus {
     outline: none;
 }
 ul, ol {
     list-style-position: inside;
+}
+
+.selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+}
+
+.selector li {
+    list-style: none;
+}
+
+.dropdown {
+    display: flex;
+    justify-content: center;
+}
+
+.dropdown ul {
+    text-align: center;
+    border-radius: 0.5rem;
+    position: relative;
+    overflow: inherit;
+    padding: 1rem;
+    width: max-content;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+.dropdown .title {
+    margin-top: 0;
+    border: 2px solid white;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: white;
+    color: black;
+}
+
+.dropdown ul:hover .title {
+    border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.dropdown ul li {
+    display: none;
+}
+
+.dropdown ul:hover li {
+    display: block;
+    padding: 0.5rem;
+    width: 100%;
+    border-left: 2px solid white;
+    border-right: 2px solid white;
+    border-top: 2px solid white;
+    box-sizing: border-box;
+}
+
+
+.dropdown ul:hover li:first-of-type {
+    border-top: 0;
+}
+
+.dropdown ul:hover li:last-of-type {
+    border-bottom: 2px solid white;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.dropdown ul:hover li:hover {
+    background: #333;
+    cursor: pointer;
+    width: 100%;
+}
+
+.swiper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.swiper form {
+    background: 0;
+    margin: 0;
+    padding: 0.5rem;
+    width: max-content;
+}
+
+.swiper form > * {
+    background: 0;
+    padding: 0;
+}
+
+.swiper .title {
+    margin: 0;
+    padding-bottom: 4px;
+    margin-top: 0;
+    height: auto;
+}
+
+.swiper button {
+    color: red;
+}
+.swiper button:hover {
+    cursor: pointer;
+    color: white;
+}
+
+ol.crud {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: baseline;
+    width: 16ch;
+}
+
+.crud li {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 6fr 1fr 1fr;
+    width: 100%;
+    align-items: center;
+}
+
+.crud li:hover {
+    font-weight: 500;
+}
+
+.crud button {
+    background: none;
+}
+
+.crud .update, .crud .delete {
+    color: white;
+}
+.crud .update:hover {
+    color: #48f;
+    cursor: pointer;
+}
+
+.crud .delete:hover {
+    color: #f24;
+    cursor: pointer;
+}
+
+.crud .empty p {
+    grid-column: 1 / 4;
+    text-align: center;
+    font-style: italic;
+}
+
+.crud:has(.empty) {
+    width: 24ch;
+}
+
+.crud .create {
+    padding: 0.3rem 1rem 0 1rem;
+    box-sizing: border-box;
+    width: 100%;
+    background: #eee;
+    border-radius: 0.25rem;
+}
+.crud .create button {
+    grid-column: 1 / 4;
+    text-align: center;
+    font-weight: 500;
+    color: #111;
+    height: 1.5rem;
+}
+.crud li button {
+    margin: 0.25rem 0;
+}
+.crud .create button > * {
+    color: #111;
+    font-weight: 900;
+}
+.crud .create button:hover {
+    cursor: pointer;
+}
+.crud .create:hover {
+    background: white;
+    cursor: pointer;
+}
+
+.crud .rename {
+    grid-column: 1 / 4;
+    padding: 0;
+    border: 0;
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.crud .rename input {
+    box-sizing: border-box;
+    padding: 0.1rem 0 0.3rem 0.3rem;
+    margin: 0;
+    border: 2px solid white;
+    width: 16ch;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.course-card {
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    background: #111;
+    color: white;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    outline: 2px solid white;
+    outline-offset: -2px;
+}
+
+.course-card:hover {
+    background-color: #222;
+    cursor: pointer;
+}
+
+.course-card.current-course {
+    background: #eee;
+    color: #111;
+    border: 0;
+    font-weight: 600;
+}
+
+.course-card.current-course:hover {
+    background: white;
+}
+
+.card-title {
+    padding: 0.5rem 0.5rem;
+    margin: 0.25rem;
+    background: #111;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.exercise {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+textarea {
+    background: #111;
+    color: white;
+    border: 2px solid white;
+    border-radius: 0.25rem;
+    box-sizing: border-box;
+    padding: 0.25rem;
+}
+.exercise label {
+    width: 50ch;
+    align-self: center;
+    margin-left: 4ch;   
+    padding: 0.25rem 0;
+}
+
+.exercise-proposals {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.exercise-proposals > * {
+    background: #111;
+}
+
+button {
+    margin: 0.5rem 0;
+    background: #ddd;
+    border-radius: 0.25rem;
+    height: 2rem;
+    color: black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    width: 100%;
+}
+
+.exercise-proposals button:hover {
+    background-color: white;
+    cursor: pointer;
+}
+.exercise-proposals button span {
+    color: #111;
+    padding-top: 4px;
+}
+.proposal, .exercise {
+    width: 50ch;
+}
+.valid {
+    border-color: lime;
+}
+.invalid {
+    border-color: red;
+}
+
+footer {
+    width: 100%;
+    height: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+footer p {
+    width: max-content;
 }

@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}Course{% endblock %}
+
+{% block content %}
+<h1>{{ exercise }}</h1>
+<div class="centered">
+    <form class="exercise" action="/update_exercise/{{ exercise.exercise_id }}" method="POST">
+        <label for="exercise_content">Question</label>
+        <textarea type="text" name="exercise_content" rows="2" cols="50">{% if exercise.exercise_content != None %}{{ exercise.exercise_content }}{% endif %}</textarea>
+        <label for="exercise_solution">Existing solution</label>
+        <textarea type="text" name="exercise_solution" rows="2" cols="50">{% if exercise.exercise_solution != None %}{{ exercise.exercise_solution }}{% endif %}</textarea>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+<div class="exercise-proposals centered">
+    <form class="proposal" action="/generate_proposed_solution" method="POST">
+        <label for="exercise_solution">Proposed solution</label>
+        <textarea class="{% if exercise.proposed_solution_validation == 1 %}valid{% endif %}{% if exercise.proposed_solution_validation == 0 %}invalid{% endif %}" readonly type="text" name="prompt_solution" rows="2" cols="50">{% if exercise.exercise_content is not none %}{{ exercise.proposed_solution_id | get_prompt_completion() }}{% endif %}</textarea>
+        <input type="hidden" name="system_prompt" value="{{ exercise.lesson_id | get_system_prompt_from_lesson() }}">
+        <input type="hidden" name="user_prompt" value="{% if exercise.exercise_content is not none %}{{ exercise.exercise_content }}{% endif %}">
+        <input type="hidden" name="prompt_id" value="{% if exercise.proposed_solution_id is not none %}{{ exercise.proposed_solution_id }}{% endif %}">
+        <input type="hidden" name="exercise_id" value="{{ exercise.exercise_id }}">
+        <input type="hidden" name="exercise_solution" value="{% if exercise.exercise_solution is not none %}{{ exercise.exercise_solution }}{% endif %}">
+        <button type="submit"><span class="material-icons">bolt</span> Generate</button>
+    </form>
+    <form class="proposal" action="/generate_proposed_new_question" method="POST">
+        <label for="exercise_solution">Proposed new question</label>
+        <textarea readonly type="text" name="prompt_new_question" rows="2" cols="50"></textarea>
+        <button type="submit"><span class="material-icons">bolt</span> Generate</button>
+    </form>
+    <form class="proposal" action="/generate_proposed_new_solution" method="POST">
+        <label for="exercise_solution">Proposed new solution</label>
+        <textarea readonly type="text" name="prompt_new_solution" rows="2" cols="50"></textarea>
+        <button type="submit"><span class="material-icons">bolt</span> Generate</button>
+    </form>
+</div>
+{% endblock %}
