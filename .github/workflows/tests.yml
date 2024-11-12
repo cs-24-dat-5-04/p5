@@ -1,0 +1,20 @@
+# This workflow will build the project and run all tests
+
+name: run tests
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  python-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install dependencies
+      run: pip install -r requirements.txt
+    - name: run tests
+      run: pytest
