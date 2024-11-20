@@ -7,26 +7,28 @@ from openai import OpenAI
 import json
 import sys
 import os
+import re
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from forms.semester_form import SemesterForm
 from forms.course_form import CourseForm
 
 def create_app(setup="none"):
-    with open('secrets.json', 'r') as file:
-        secrets = json.load(file)
-    
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = secrets["csrf_token"]
     if setup == "none":
         engine = create_engine('sqlite:///./database.db', echo=True)
     elif setup == "test":
         engine = create_engine('sqlite:///./testdatabase.db', echo=True)
     else:
         raise Exception("wrong setup argument")
+    with open('secrets.json', 'r') as file:
+        secrets = json.load(file)
+        app.config['SECRET_KEY'] = secrets["csrf_token"]
     Base = declarative_base()
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()
+    test = [app, session]
+    
 
     from models import Semester, Course, Lesson, Exercise, FineTuning, Prompt, SystemPrompt
 
@@ -175,30 +177,41 @@ def create_app(setup="none"):
     def delete_semester():
         semester_id = request.form.get('semester_id')
         semester = session.query(Semester).get(semester_id)
+        print(semester_id)
+        print(semester)
         
         if semester:
             session.delete(semester)
             session.commit()
-
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else:
+            return redirect(request.referrer, 404)
 
     @app.route('/save_semester', methods=['POST'])
     def save_semester():
         semester_id = request.form.get('semester_id')
         new_name = request.form.get('new_name')
         semester = session.query(Semester).get(semester_id)
-        if semester:
+        match = re.search(r"[A-Za-z][A-Za-z]?[A-Za-z]?\d\d?", new_name)
+        if semester and match and match.group() == new_name and len(new_name) <= 5:
             semester.semester_name = new_name
             session.commit()
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else:
+            return redirect(request.referrer, 404)
 
     @app.route('/create_semester', methods=['POST'])
     def create_semester():
         semester_name = request.form.get('semester_name')
-        semester = Semester(semester_name = semester_name)
-        session.add(semester)
-        session.commit()
-        return redirect(request.referrer)
+        match = re.search(r"[A-Za-z][A-Za-z]?[A-Za-z]?\d\d?", semester_name)
+        if match and match.group() == semester_name and len(semester_name) <= 5:
+            print(321321)
+            semester = Semester(semester_name = semester_name)
+            session.add(semester)
+            session.commit()
+            return redirect(request.referrer)
+        else:
+            return redirect(request.referrer, 404)
 
     @app.route('/delete_course', methods=['POST'])
     def delete_course():
@@ -208,8 +221,9 @@ def create_app(setup="none"):
         if course:
             session.delete(course)
             session.commit()
-
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else:
+            return redirect(request.referrer, 404)
 
     @app.route('/save_course', methods=['POST'])
     def save_course():
@@ -219,20 +233,25 @@ def create_app(setup="none"):
         if course:
             course.course_name = new_name
             session.commit()
-
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/create_course', methods=['POST'])
     def create_course():
         course_name = request.form.get('course_name')
+        match = re.search(r"[A-Za-z][A-Za-z]?[A-Za-z]?[A-Za-z]?[A-Za-z]?", course_name)
         course_year = request.form.get('course_year')
+        course_year_int = int(course_year)
         semester_id = request.form.get('semester_id')
         semester = session.query(Semester).filter_by(semester_id=semester_id).first()
         course = Course(course_name=course_name, course_year=course_year, semester=semester)
-        if semester:
+        if semester and match and match.group() == course_name and len(course_name) <= 5 and course_year_int >= 1890 and course_year_int <= 2100:
             session.add(course)
             session.commit()
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/delete_lesson', methods=['POST'])
     def delete_lesson():
@@ -240,11 +259,11 @@ def create_app(setup="none"):
         lesson = session.query(Lesson).get(lesson_id)
         
         if lesson:
-            # TODO: Auto-decrement following lessons
             session.delete(lesson)
             session.commit()
-
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/save_lesson', methods=['POST'])
     def save_lesson():
@@ -254,7 +273,9 @@ def create_app(setup="none"):
         if lesson:
             lesson.lesson_name = new_name
             session.commit()
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/create_lesson', methods=['POST'])
     def create_lesson():
@@ -264,6 +285,9 @@ def create_app(setup="none"):
             lesson_number = last_lesson.lesson_number + 1
         else:
             lesson_number = 1
+        course = session.query(Course).filter_by(course_id = course_id).first()
+        if not course:
+            return redirect(request.referrer, 404)
         lesson = Lesson(course_id = course_id, lesson_number = lesson_number)
         session.add(lesson)
         session.commit()
@@ -275,11 +299,11 @@ def create_app(setup="none"):
         exercise = session.query(Exercise).get(exercise_id)
         
         if exercise:
-            # TODO: Auto-decrement following lessons
             session.delete(exercise)
             session.commit()
-
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/save_exercise', methods=['POST'])
     def save_exercise():
@@ -289,7 +313,9 @@ def create_app(setup="none"):
         if exercise:
             exercise.exercise_name = new_name
             session.commit()
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/create_exercise', methods=['POST'])
     def create_exercise():
@@ -299,6 +325,9 @@ def create_app(setup="none"):
             exercise_number = last_exercise.exercise_number + 1
         else:
             exercise_number = 1
+        lesson = session.query(Lesson).filter_by(lesson_id = lesson_id).first()
+        if not lesson:
+            return redirect(request.referrer, 404)
         exercise = Exercise(lesson_id = lesson_id, exercise_number = exercise_number)
         session.add(exercise)
         session.commit()
@@ -318,7 +347,9 @@ def create_app(setup="none"):
             exercise.exercise_content = exercise_content
             exercise.exercise_solution = exercise_solution
             session.commit()
-        return redirect(request.referrer)
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
 
     @app.route('/update_system_prompt/<int:lesson_id>', methods=['POST'])
     def update_system_prompt(lesson_id):
@@ -377,8 +408,8 @@ def create_app(setup="none"):
             exercise.proposed_solution_validation = False
         session.commit()
         return redirect(request.referrer)
-    return app
+    return test
 
 if __name__ == '__main__':
-    app = create_app()
+    app = create_app()[0]
     app.run(debug=True)

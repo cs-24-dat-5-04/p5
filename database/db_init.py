@@ -5,8 +5,6 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def setup_database(setup="none"):
     if setup == "test":
-        if os.path.exists("testdatabase.db"):
-            os.remove("testdatabase.db")
         connection = sqlite3.connect("testdatabase.db")
     elif setup == "none":
         connection = sqlite3.connect("database.db")
