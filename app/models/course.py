@@ -1,17 +1,14 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
-from sqlalchemy.orm import relationship, declarative_base
-from .base import Base
-from .semester import Semester
+from . import db
 
-class Course(Base):
+class Course(db.Model):
     __tablename__ = 'course'
-    course_id = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
-    course_name = Column(Text, nullable=False)
-    course_year = Column(Integer, nullable=False)
-    semester_id = Column(Integer, ForeignKey('semester.semester_id'), nullable=False)
+    course_id = db.Column(db.Integer, autoincrement=True, primary_key=True, nullable=False)
+    course_name = db.Column(db.Text, nullable=False)
+    course_year = db.Column(db.Integer, nullable=False)
+    semester_id = db.Column(db.Integer, db.ForeignKey('semester.semester_id'), nullable=False)
     
-    semester = relationship('Semester', back_populates='courses')
-    lessons = relationship('Lesson', back_populates='course', cascade='all, delete-orphan')
+    semester = db.relationship('Semester', back_populates='courses')
+    lessons = db.relationship('Lesson', back_populates='course', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"{self.course_name}"

@@ -1,13 +1,11 @@
-from sqlalchemy import Column, Integer, Text, PrimaryKeyConstraint
-from sqlalchemy.orm import relationship, declarative_base
-from .base import Base
+from . import db
 
-class Semester(Base):
+class Semester(db.Model):
     __tablename__ = 'semester'
-    semester_id = Column(Integer, autoincrement=True, primary_key=True, nullable=False)
-    semester_name = Column(Text, nullable=False)
+    semester_id = db.Column(db.Integer, autoincrement=True, primary_key=True, nullable=False)
+    semester_name = db.Column(db.Text, nullable=False)
     
-    courses = relationship('Course', back_populates='semester', cascade='all, delete-orphan')
+    courses = db.relationship('Course', back_populates='semester', cascade='all, delete-orphan')
     
     def __repr__(self):
         return f"{self.semester_name}"

@@ -1,3 +1,7 @@
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
 from .semester import Semester
 from .course import Course
 from .lesson import Lesson

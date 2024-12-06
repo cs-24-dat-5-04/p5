@@ -56,12 +56,18 @@ CREATE TABLE system_prompt (
     FOREIGN KEY (lesson_id) REFERENCES lesson(lesson_id)
 );
 
+CREATE TABLE fine_tuning (
+    fine_tuning_id INTEGER PRIMARY KEY,
+    training_id INTEGER NOT NULL,
+    fine_tuning_model_id INTEGER,
+    exercise_id INTEGER,
+    FOREIGN KEY (exercise_id) REFERENCES exercise(exercise_id)
+);
+
 CREATE TABLE prompt (
     prompt_id INTEGER PRIMARY KEY,
     user_prompt TEXT NOT NULL,
     completion TEXT,
-    exercise_id INTEGER,
     fine_tuning_id INTEGER,
-    FOREIGN KEY (exercise_id) REFERENCES exercise(exercise_id),
     FOREIGN KEY (fine_tuning_id) REFERENCES fine_tuning(fine_tuning_id)
 );

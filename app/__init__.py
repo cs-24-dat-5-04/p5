@@ -1,36 +1,58 @@
-import re
 from flask import Flask, redirect, render_template, request
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
+from app.forms.semester_form import SemesterForm
+from app.forms.course_form import CourseForm
 from openai import OpenAI
+from app.models import db, Course, Exercise, FineTuning, Lesson, Prompt, Semester, SystemPrompt
 import json
 import sys
 import os
 import re
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from forms.semester_form import SemesterForm
-from forms.course_form import CourseForm
-
-def create_app(setup="none"):
+def create_app():
     app = Flask(__name__)
-    if setup == "none":
-        engine = create_engine('sqlite:///./database.db', echo=True)
-    elif setup == "test":
-        engine = create_engine('sqlite:///./testdatabase.db', echo=True)
-    else:
-        raise Exception("wrong setup argument")
     with open('secrets.json', 'r') as file:
         secrets = json.load(file)
-        app.config['SECRET_KEY'] = secrets["csrf_token"]
-    Base = declarative_base()
-    Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    test = [app, session]
+    app.config['SECRET_KEY'] = secrets["csrf_token"]
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
+    # Initialize database and update tables as needed
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+        # Populate Semester
+        semester = Semester(semester_name='DAT5')
+        db.session.add(semester)
+        db.session.commit()  # Commit to get the generated primary key (semester_id)
 
-    from models import Semester, Course, Lesson, Exercise, FineTuning, Prompt, SystemPrompt
+        # Populate Courses
+        courses = [
+            Course(course_name='MI', course_year=2024, semester_id=semester.semester_id),
+            Course(course_name='ASE', course_year=2024, semester_id=semester.semester_id),
+            Course(course_name='DBS', course_year=2024, semester_id=semester.semester_id),
+        ]
+        db.session.add_all(courses)
+        db.session.commit()  # Commit to get the generated primary keys for courses
+
+        # Populate Lessons
+        for course in courses:
+            lesson = Lesson(lesson_number=1, course_id=course.course_id)
+            db.session.add(lesson)
+        db.session.commit()  # Commit to get the generated primary keys for lessons
+
+        # Populate Exercises
+        lessons = Lesson.query.join(Course).join(Semester).filter(
+            Course.course_name.in_(['MI', 'ASE', 'DBS']),
+            Semester.semester_name == 'DAT5'
+        ).all()
+
+        for lesson in lessons:
+            exercise = Exercise(exercise_number=1, lesson_id=lesson.lesson_id)
+            db.session.add(exercise)
+        db.session.commit()
 
     def complete(system_prompt, user_prompt):
         model = 'gpt-4o-mini'
@@ -52,12 +74,12 @@ def create_app(setup="none"):
 
     @app.template_filter('get_user_prompt')
     def get_user_prompt(prompt_id):
-        prompt = session.query(Prompt).get(prompt_id)
+        prompt = db.session.query(Prompt).get(prompt_id)
         return prompt.user_prompt
 
     @app.template_filter('get_prompt_completion')
     def get_prompt_completion(prompt_id):
-        prompt = session.query(Prompt).get(prompt_id)
+        prompt = db.session.query(Prompt).get(prompt_id)
         if prompt != None:
             return prompt.completion
         else:
@@ -65,7 +87,7 @@ def create_app(setup="none"):
 
     @app.template_filter('get_system_prompt_from_lesson')
     def get_system_prompt_from_lesson(lesson_id):
-        system_prompt = session.query(SystemPrompt).filter_by(lesson_id = lesson_id).first()
+        system_prompt = db.session.query(SystemPrompt).filter_by(lesson_id = lesson_id).first()
         if system_prompt:
             return system_prompt.system_prompt
         return None
@@ -99,8 +121,8 @@ def create_app(setup="none"):
             # markdown.markdown(completion.choices[0].message.content)
 
             form_submission = Prompt(user_prompt = prompt, completion = output)
-            session.add(form_submission)
-            session.commit()
+            db.session.add(form_submission)
+            db.session.commit()
 
         return render_template("prompt.html", output=output, active_page='prompt')
 
@@ -113,39 +135,39 @@ def create_app(setup="none"):
         form = SemesterForm()
         if request.method == 'POST' and form.validate_on_submit():
             form_submission = Semester(semester_name = form.name.data)
-            session.add(form_submission)
-            session.commit()
-        semester_list = session.query(Semester).all()
+            db.session.add(form_submission)
+            db.session.commit()
+        semester_list = db.session.query(Semester).all()
         return render_template('semester.html', semester_list=semester_list, form=form, active_page='semester')
 
     @app.route('/semester/<int:semester_id>', methods=['GET', 'POST'])
     def show_semester(semester_id):
-        semester = session.query(Semester).filter(Semester.semester_id == semester_id).first()
+        semester = db.session.query(Semester).filter(Semester.semester_id == semester_id).first()
         course_year = request.args.get('year', default=2024, type=int)
-        course_list = session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course_year))
+        course_list = db.session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course_year))
         
         form = CourseForm()
         if semester:
             if request.method == 'POST' and form.validate_on_submit():
                 form_submission = Course(course_name=form.name.data, course_year=form.year.data, semester=semester)
-                # TODO: Insert for loop for the entered number of lessons to create lesson objects and add them to the session
-                session.add(form_submission)
-                session.commit()
+                # TODO: Insert for loop for the entered number of lessons to create lesson objects and add them to the db.session
+                db.session.add(form_submission)
+                db.session.commit()
             return render_template('show_semester.html', semester=semester, form=form, course_list=course_list, course_year = course_year, active_page='semester')
         else:
             return "Semester not found", 404
         
     @app.route('/course', methods=['GET', 'POST'])
     def course():
-        course_list = session.query(Course, Semester).join(Semester, Course.semester_id == Semester.semester_id).all()
+        course_list = db.session.query(Course, Semester).join(Semester, Course.semester_id == Semester.semester_id).all()
         return render_template('course.html', course_list=course_list, active_page='course')
 
     @app.route('/semester/<int:semester_id>/course/<int:course_id>', methods=['GET', 'POST'])
     def show_course(semester_id, course_id):
-        course = session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_id == course_id)).first()
-        lesson_list = session.query(Lesson).filter(Lesson.course_id == course_id)
-        course_list = session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course.course_year))
-        semester = session.query(Semester).filter(Semester.semester_id == semester_id).first()
+        course = db.session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_id == course_id)).first()
+        lesson_list = db.session.query(Lesson).filter(Lesson.course_id == course_id)
+        course_list = db.session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course.course_year))
+        semester = db.session.query(Semester).filter(Semester.semester_id == semester_id).first()
         return render_template('show_course.html', course=course, semester=semester, lesson_list=lesson_list, course_list=course_list, active_course_id=course_id)
 
     @app.route('/exercise', methods=['GET', 'POST'])
@@ -158,10 +180,10 @@ def create_app(setup="none"):
 
     @app.route('/semester/<int:semester_id>/course/<int:course_id>/lesson/<int:lesson_number>', methods=['GET', 'POST'])
     def show_lesson(semester_id, course_id, lesson_number):
-        course = session.query(Course).filter(Course.course_id == course_id).first()
-        lesson = session.query(Lesson).filter(and_(Lesson.course_id == course_id, Lesson.lesson_number == lesson_number)).first()
-        exercise_list = session.query(Exercise).filter(Exercise.lesson_id == lesson.lesson_id)
-        system_prompt = session.query(SystemPrompt).filter_by(lesson_id = lesson.lesson_id).first()
+        course = db.session.query(Course).filter(Course.course_id == course_id).first()
+        lesson = db.session.query(Lesson).filter(and_(Lesson.course_id == course_id, Lesson.lesson_number == lesson_number)).first()
+        exercise_list = db.session.query(Exercise).filter(Exercise.lesson_id == lesson.lesson_id)
+        system_prompt = db.session.query(SystemPrompt).filter_by(lesson_id = lesson.lesson_id).first()
         return render_template('show_lesson.html', course=course, lesson=lesson, lesson_id=lesson.lesson_id, exercise_list=exercise_list, system_prompt=system_prompt, active_page='lesson')
 
     @app.errorhandler(404)
@@ -176,13 +198,13 @@ def create_app(setup="none"):
     @app.route('/delete_semester', methods=['POST'])
     def delete_semester():
         semester_id = request.form.get('semester_id')
-        semester = session.query(Semester).get(semester_id)
+        semester = db.session.query(Semester).get(semester_id)
         print(semester_id)
         print(semester)
         
         if semester:
-            session.delete(semester)
-            session.commit()
+            db.session.delete(semester)
+            db.session.commit()
             return redirect(request.referrer)
         else:
             return redirect(request.referrer, 404)
@@ -191,11 +213,11 @@ def create_app(setup="none"):
     def save_semester():
         semester_id = request.form.get('semester_id')
         new_name = request.form.get('new_name')
-        semester = session.query(Semester).get(semester_id)
+        semester = db.session.query(Semester).get(semester_id)
         match = re.search(r"[A-Za-z][A-Za-z]?[A-Za-z]?\d\d?", new_name)
         if semester and match and match.group() == new_name and len(new_name) <= 5:
             semester.semester_name = new_name
-            session.commit()
+            db.session.commit()
             return redirect(request.referrer)
         else:
             return redirect(request.referrer, 404)
@@ -207,8 +229,8 @@ def create_app(setup="none"):
         if match and match.group() == semester_name and len(semester_name) <= 5:
             print(321321)
             semester = Semester(semester_name = semester_name)
-            session.add(semester)
-            session.commit()
+            db.session.add(semester)
+            db.session.commit()
             return redirect(request.referrer)
         else:
             return redirect(request.referrer, 404)
@@ -216,11 +238,11 @@ def create_app(setup="none"):
     @app.route('/delete_course', methods=['POST'])
     def delete_course():
         course_id = request.form.get('course_id')
-        course = session.query(Course).get(course_id)
+        course = db.session.query(Course).get(course_id)
         
         if course:
-            session.delete(course)
-            session.commit()
+            db.session.delete(course)
+            db.session.commit()
             return redirect(request.referrer)
         else:
             return redirect(request.referrer, 404)
@@ -229,10 +251,10 @@ def create_app(setup="none"):
     def save_course():
         course_id = request.form.get('course_id')
         new_name = request.form.get('new_name')
-        course = session.query(Course).get(course_id)
+        course = db.session.query(Course).get(course_id)
         if course:
             course.course_name = new_name
-            session.commit()
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -244,11 +266,11 @@ def create_app(setup="none"):
         course_year = request.form.get('course_year')
         course_year_int = int(course_year)
         semester_id = request.form.get('semester_id')
-        semester = session.query(Semester).filter_by(semester_id=semester_id).first()
+        semester = db.session.query(Semester).filter_by(semester_id=semester_id).first()
         course = Course(course_name=course_name, course_year=course_year, semester=semester)
         if semester and match and match.group() == course_name and len(course_name) <= 5 and course_year_int >= 1890 and course_year_int <= 2100:
-            session.add(course)
-            session.commit()
+            db.session.add(course)
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -256,11 +278,11 @@ def create_app(setup="none"):
     @app.route('/delete_lesson', methods=['POST'])
     def delete_lesson():
         lesson_id = request.form.get('lesson_id')
-        lesson = session.query(Lesson).get(lesson_id)
+        lesson = db.session.query(Lesson).get(lesson_id)
         
         if lesson:
-            session.delete(lesson)
-            session.commit()
+            db.session.delete(lesson)
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -269,10 +291,10 @@ def create_app(setup="none"):
     def save_lesson():
         lesson_id = request.form.get('lesson_id')
         new_name = request.form.get('new_name')
-        lesson = session.query(Lesson).get(lesson_id)
+        lesson = db.session.query(Lesson).get(lesson_id)
         if lesson:
             lesson.lesson_name = new_name
-            session.commit()
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -280,27 +302,27 @@ def create_app(setup="none"):
     @app.route('/create_lesson', methods=['POST'])
     def create_lesson():
         course_id = request.form.get('course_id')
-        last_lesson = session.query(Lesson).filter_by(course_id = course_id).order_by(Lesson.lesson_number.desc()).first()
+        last_lesson = db.session.query(Lesson).filter_by(course_id = course_id).order_by(Lesson.lesson_number.desc()).first()
         if last_lesson:
             lesson_number = last_lesson.lesson_number + 1
         else:
             lesson_number = 1
-        course = session.query(Course).filter_by(course_id = course_id).first()
+        course = db.session.query(Course).filter_by(course_id = course_id).first()
         if not course:
             return redirect(request.referrer, 404)
         lesson = Lesson(course_id = course_id, lesson_number = lesson_number)
-        session.add(lesson)
-        session.commit()
+        db.session.add(lesson)
+        db.session.commit()
         return redirect(request.referrer)
 
     @app.route('/delete_exercise', methods=['POST'])
     def delete_exercise():
         exercise_id = request.form.get('exercise_id')
-        exercise = session.query(Exercise).get(exercise_id)
+        exercise = db.session.query(Exercise).get(exercise_id)
         
         if exercise:
-            session.delete(exercise)
-            session.commit()
+            db.session.delete(exercise)
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -309,10 +331,10 @@ def create_app(setup="none"):
     def save_exercise():
         exercise_id = request.form.get('exercise_id')
         new_name = request.form.get('new_name')
-        exercise = session.query(Exercise).get(exercise_id)
+        exercise = db.session.query(Exercise).get(exercise_id)
         if exercise:
             exercise.exercise_name = new_name
-            session.commit()
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -320,33 +342,33 @@ def create_app(setup="none"):
     @app.route('/create_exercise', methods=['POST'])
     def create_exercise():
         lesson_id = request.form.get('lesson_id')
-        last_exercise = session.query(Exercise).filter_by(lesson_id = lesson_id).order_by(Exercise.exercise_number.desc()).first()
+        last_exercise = db.session.query(Exercise).filter_by(lesson_id = lesson_id).order_by(Exercise.exercise_number.desc()).first()
         if last_exercise:
             exercise_number = last_exercise.exercise_number + 1
         else:
             exercise_number = 1
-        lesson = session.query(Lesson).filter_by(lesson_id = lesson_id).first()
+        lesson = db.session.query(Lesson).filter_by(lesson_id = lesson_id).first()
         if not lesson:
             return redirect(request.referrer, 404)
         exercise = Exercise(lesson_id = lesson_id, exercise_number = exercise_number)
-        session.add(exercise)
-        session.commit()
+        db.session.add(exercise)
+        db.session.commit()
         return redirect(request.referrer)
 
     @app.route('/exercise/<int:exercise_id>', methods=['GET', 'POST'])
     def show_exercise(exercise_id):
-        exercise = session.query(Exercise).filter_by(exercise_id = exercise_id).first()
+        exercise = db.session.query(Exercise).filter_by(exercise_id = exercise_id).first()
         return render_template('show_exercise.html', exercise=exercise, active_page='exercise')
 
     @app.route('/update_exercise/<int:exercise_id>', methods=['POST'])
     def update_exercise(exercise_id):
         exercise_content = request.form.get('exercise_content')
         exercise_solution = request.form.get('exercise_solution')
-        exercise = session.query(Exercise).get(exercise_id)
+        exercise = db.session.query(Exercise).get(exercise_id)
         if exercise:
             exercise.exercise_content = exercise_content
             exercise.exercise_solution = exercise_solution
-            session.commit()
+            db.session.commit()
             return redirect(request.referrer)
         else: 
             return redirect(request.referrer, 404)
@@ -354,32 +376,32 @@ def create_app(setup="none"):
     @app.route('/update_system_prompt/<int:lesson_id>', methods=['POST'])
     def update_system_prompt(lesson_id):
         content = request.form.get('system_prompt')
-        system_prompt = session.query(SystemPrompt).filter_by(lesson_id = lesson_id).first()
-        lesson = session.query(Lesson).get(lesson_id)
+        system_prompt = db.session.query(SystemPrompt).filter_by(lesson_id = lesson_id).first()
+        lesson = db.session.query(Lesson).get(lesson_id)
         if lesson:
             if system_prompt:
                 system_prompt.system_prompt = content
             else:
                 system_prompt = SystemPrompt(system_prompt = content, lesson_id = lesson_id)
-                session.add(system_prompt)
-                session.flush()
+                db.session.add(system_prompt)
+                db.session.flush()
             lesson.system_prompt_id = system_prompt.system_prompt_id
-            session.commit()
+            db.session.commit()
         return redirect(request.referrer)
 
     def complete_prompt(user_prompt, system_prompt, prompt_id=None):
         if prompt_id:
             print(f'Prompt ID: {prompt_id}')
-            prompt = session.query(Prompt).get(prompt_id)
+            prompt = db.session.query(Prompt).get(prompt_id)
         else:
             print("Prompt ID is None")
             prompt = Prompt(user_prompt = user_prompt)
-            session.add(prompt)
-            session.flush()
+            db.session.add(prompt)
+            db.session.flush()
         completion = complete(system_prompt, user_prompt)
         print(f'Prompt: {prompt}')
         prompt.completion = completion
-        session.commit()
+        db.session.commit()
         return completion, prompt.prompt_id
 
     def validate_proposed_solution(question, solution, proposed_solution):
@@ -400,16 +422,19 @@ def create_app(setup="none"):
         exercise_solution = request.form.get('exercise_solution')
         prompt_id = request.form.get('prompt_id')
         proposed_solution, prompt_id = complete_prompt(user_prompt, system_prompt, prompt_id)
-        exercise = session.query(Exercise).get(exercise_id)
+        exercise = db.session.query(Exercise).get(exercise_id)
         exercise.proposed_solution_id = prompt_id
         if validate_proposed_solution(user_prompt, exercise_solution, proposed_solution):
             exercise.proposed_solution_validation = True
         else:
             exercise.proposed_solution_validation = False
-        session.commit()
+        db.session.commit()
         return redirect(request.referrer)
-    return test
+    return app
+
+def create_flask_app():
+    return create_app()
 
 if __name__ == '__main__':
-    app = create_app()[0]
+    app = create_app()
     app.run(debug=True)
