@@ -451,3 +451,19 @@ footer {
 footer p {
     width: max-content;
 }
+
+.type-selector {
+    width: min-content;
+}
+
+.announcement {
+    margin-top: 2rem;
+}
+
+input[type='file'] {
+    box-sizing: border-box;
+}
+
+.fileupload {
+    width: 48ch;
+}

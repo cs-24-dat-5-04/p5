@@ -1,4 +1,6 @@
-from flask import Flask, redirect, render_template, request
+import random
+import string
+from flask import Flask, flash, jsonify, redirect, render_template, request
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
@@ -16,43 +18,55 @@ def create_app():
     with open('secrets.json', 'r') as file:
         secrets = json.load(file)
     app.config['SECRET_KEY'] = secrets["csrf_token"]
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(app.instance_path, 'database.db')}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Max file size = 16MB
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+    
+    # Specify upload folder
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+    
+    # Ensure the upload folder exists
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
     
     # Initialize database and update tables as needed
     db.init_app(app)
     with app.app_context():
         db.create_all()
         # Populate Semester
-        semester = Semester(semester_name='DAT5')
-        db.session.add(semester)
-        db.session.commit()  # Commit to get the generated primary key (semester_id)
+        existing_semester = Semester.query.filter_by(semester_name='DAT5').first()
+        if not existing_semester: 
+            semester = Semester(semester_name='DAT5')
+            db.session.add(semester)
+            db.session.commit()  # Commit to get the generated primary key (semester_id)
 
-        # Populate Courses
-        courses = [
-            Course(course_name='MI', course_year=2024, semester_id=semester.semester_id),
-            Course(course_name='ASE', course_year=2024, semester_id=semester.semester_id),
-            Course(course_name='DBS', course_year=2024, semester_id=semester.semester_id),
-        ]
-        db.session.add_all(courses)
-        db.session.commit()  # Commit to get the generated primary keys for courses
+            # Populate Courses
+            courses = [
+                Course(course_name='MI', course_year=2024, semester_id=semester.semester_id),
+                Course(course_name='ASE', course_year=2024, semester_id=semester.semester_id),
+                Course(course_name='DBS', course_year=2024, semester_id=semester.semester_id),
+            ]
+            db.session.add_all(courses)
+            db.session.commit()  # Commit to get the generated primary keys for courses
 
-        # Populate Lessons
-        for course in courses:
-            lesson = Lesson(lesson_number=1, course_id=course.course_id)
-            db.session.add(lesson)
-        db.session.commit()  # Commit to get the generated primary keys for lessons
+            # Populate Lessons
+            for course in courses:
+                lesson = Lesson(lesson_number=1, course_id=course.course_id)
+                db.session.add(lesson)
+            db.session.commit()  # Commit to get the generated primary keys for lessons
 
-        # Populate Exercises
-        lessons = Lesson.query.join(Course).join(Semester).filter(
-            Course.course_name.in_(['MI', 'ASE', 'DBS']),
-            Semester.semester_name == 'DAT5'
-        ).all()
+            # Populate Exercises
+            lessons = Lesson.query.join(Course).join(Semester).filter(
+                Course.course_name.in_(['MI', 'ASE', 'DBS']),
+                Semester.semester_name == 'DAT5'
+            ).all()
 
-        for lesson in lessons:
-            exercise = Exercise(exercise_number=1, lesson_id=lesson.lesson_id)
-            db.session.add(exercise)
-        db.session.commit()
+            for lesson in lessons:
+                exercise = Exercise(exercise_number=1, lesson_id=lesson.lesson_id)
+                db.session.add(exercise)
+            db.session.commit()
 
     def complete(system_prompt, user_prompt):
         model = 'gpt-4o-mini'
@@ -358,7 +372,12 @@ def create_app():
     @app.route('/exercise/<int:exercise_id>', methods=['GET', 'POST'])
     def show_exercise(exercise_id):
         exercise = db.session.query(Exercise).filter_by(exercise_id = exercise_id).first()
-        return render_template('show_exercise.html', exercise=exercise, active_page='exercise')
+        prompts = None
+        if exercise.exercise_type == 'advanced':
+            fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise.exercise_id).first()
+            if fine_tuning:
+                prompts = db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
+        return render_template('show_exercise.html', exercise=exercise, prompts=prompts, active_page='exercise')
 
     @app.route('/update_exercise/<int:exercise_id>', methods=['POST'])
     def update_exercise(exercise_id):
@@ -373,6 +392,20 @@ def create_app():
         else: 
             return redirect(request.referrer, 404)
 
+    @app.route('/update_exercise_type/<int:exercise_id>', methods=['POST'])
+    def update_exercise_type(exercise_id):
+        exercise_type = request.form.get('exercise_type')
+        exercise = db.session.query(Exercise).get(exercise_id)
+        if exercise:
+            exercise.exercise_type = exercise_type
+            fine_tuning_exists = db.session.query(FineTuning).filter_by(exercise_id = exercise_id).first()
+            if not fine_tuning_exists:
+                db.session.add(FineTuning(exercise_id = exercise_id))
+            db.session.commit()
+            return redirect(request.referrer)
+        else: 
+            return redirect(request.referrer, 404)
+        
     @app.route('/update_system_prompt/<int:lesson_id>', methods=['POST'])
     def update_system_prompt(lesson_id):
         content = request.form.get('system_prompt')
@@ -387,6 +420,7 @@ def create_app():
                 db.session.flush()
             lesson.system_prompt_id = system_prompt.system_prompt_id
             db.session.commit()
+            
         return redirect(request.referrer)
 
     def complete_prompt(user_prompt, system_prompt, prompt_id=None):
@@ -430,8 +464,44 @@ def create_app():
             exercise.proposed_solution_validation = False
         db.session.commit()
         return redirect(request.referrer)
-    return app
 
+    @app.route('/upload_fine_tuning_file/<int:exercise_id>', methods=['POST'])
+    def upload_fine_tuning_file(exercise_id):
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.referrer)
+
+        file = request.files['file']
+
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.referrer)
+
+        if file and file.filename.rsplit('.', 1)[1].lower() == 'jsonl':
+            filename = file.filename
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise_id).first()
+            fine_tuning.filename = filename
+            db.session.commit()
+            extracted_data = []
+            for line in file:
+                message = json.loads(line)  # Parse the JSON line
+                system_content = message['messages'][0]['content']  # Extract system content
+                user_content = message['messages'][1]['content']  # Extract user content
+                print(f'System prompt: {system_content}\nUser prompt: {user_content}')
+                # Store the extracted content for further use
+                extracted_data.append({
+                    'system_prompt': system_content,
+                    'user_prompt': user_content,
+                })
+
+            return jsonify({'status': 'success', 'data': extracted_data}), 200
+
+        flash('File type not allowed')
+        return redirect(request.referrer)
+
+    return app
+        
 def create_flask_app():
     return create_app()
 

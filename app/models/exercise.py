@@ -8,6 +8,7 @@ class Exercise(db.Model):
     exercise_number = db.Column(db.Integer, nullable=False)
     exercise_content = db.Column(db.Text, nullable=True)
     exercise_solution = db.Column(db.Text, nullable=True)
+    exercise_type = db.Column(db.Text, default="simple")
     lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.lesson_id'), nullable=False)
     proposed_solution_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
     proposed_new_question_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)

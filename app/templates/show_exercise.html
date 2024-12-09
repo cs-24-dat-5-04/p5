@@ -5,6 +5,17 @@
 {% block content %}
 <h1>{{ exercise }}</h1>
 <div class="centered">
+    <form class="exercise" action="/update_exercise_type/{{ exercise.exercise_id }}" method="POST">
+        <label for="exercise_type">Exercise type</label>
+        <select name="exercise_type" id="exercise_type" class="type-selector">
+            <option value="simple" {{ 'selected' if exercise.exercise_type == 'simple' }}>Simple</option>
+            <option value="advanced" {{ 'selected' if exercise.exercise_type == 'advanced' }}>Advanced</option>
+        </select>
+        <button type="submit">Save</button>
+    </form>
+</div>
+{% if exercise.exercise_type == 'simple' %}
+<div class="centered">
     <form class="exercise" action="/update_exercise/{{ exercise.exercise_id }}" method="POST">
         <label for="exercise_content">Question</label>
         <textarea type="text" name="exercise_content" rows="2" cols="50">{% if exercise.exercise_content != None %}{{ exercise.exercise_content }}{% endif %}</textarea>
@@ -35,4 +46,26 @@
         <button type="submit"><span class="material-icons">bolt</span> Generate</button>
     </form>
 </div>
+{% endif %}
+{% if exercise.exercise_type == 'advanced' %}
+{% if prompts %}
+{% for prompt in prompts%}
+    <p class="centered">Prompt {{prompt.id }}</p>
+{% endfor %}
+{% else %}
+    <em class="centered announcement">No prompts were found.</em>
+{% endif %}
+<div class="centered">
+    <form class="proposal" action="/create_exercise_prompt" method="POST">
+        <button type="submit">New prompt</button>
+    </form>
+</div>
+<div class="centered">
+    <form class="proposal" action="/upload_fine_tuning_file/{{ exercise.exercise_id }}" method="POST" enctype="multipart/form-data">
+        <label for="file">Add Fine Tuning File</label>
+        <input type="file" id="file" name="file" required>
+        <button type="submit">Upload</button>
+    </form>
+</div>
+{% endif %}
 {% endblock %}
