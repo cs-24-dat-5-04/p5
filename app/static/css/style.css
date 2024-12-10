@@ -467,3 +467,33 @@ input[type='file'] {
 .fileupload {
     width: 48ch;
 }
+
+#prompt-container {
+    width: 48ch;
+    display: grid;
+}
+
+#prompt-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#prompt-header button {
+    width: min-content;
+    padding: 1rem;
+}
+
+#prompt-header h3 {
+    margin-top: 0;
+    margin: 1rem;
+}
+
+#current-prompt-form {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#user-prompt {
+    height: max-content;
+}

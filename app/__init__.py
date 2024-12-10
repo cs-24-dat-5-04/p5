@@ -1,12 +1,14 @@
 import random
 import string
-from flask import Flask, flash, jsonify, redirect, render_template, request
+from flask import Flask, Response, flash, jsonify, redirect, render_template, request
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from app.forms.semester_form import SemesterForm
 from app.forms.course_form import CourseForm
+from werkzeug.utils import secure_filename
 from openai import OpenAI
+
 from app.models import db, Course, Exercise, FineTuning, Lesson, Prompt, Semester, SystemPrompt
 import json
 import sys
@@ -376,7 +378,10 @@ def create_app():
         if exercise.exercise_type == 'advanced':
             fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise.exercise_id).first()
             if fine_tuning:
-                prompts = db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
+                    prompts = [
+        {'prompt_id': p.prompt_id, 'system_prompt': p.system_prompt, 'user_prompt': p.user_prompt}
+        for p in db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
+    ]
         return render_template('show_exercise.html', exercise=exercise, prompts=prompts, active_page='exercise')
 
     @app.route('/update_exercise/<int:exercise_id>', methods=['POST'])
@@ -478,30 +483,86 @@ def create_app():
             return redirect(request.referrer)
 
         if file and file.filename.rsplit('.', 1)[1].lower() == 'jsonl':
-            filename = file.filename
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise_id).first()
-            fine_tuning.filename = filename
-            db.session.commit()
-            extracted_data = []
-            for line in file:
-                message = json.loads(line)  # Parse the JSON line
-                system_content = message['messages'][0]['content']  # Extract system content
-                user_content = message['messages'][1]['content']  # Extract user content
-                print(f'System prompt: {system_content}\nUser prompt: {user_content}')
-                # Store the extracted content for further use
-                extracted_data.append({
-                    'system_prompt': system_content,
-                    'user_prompt': user_content,
-                })
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-            return jsonify({'status': 'success', 'data': extracted_data}), 200
+            # Save the file
+            file.save(file_path)
+
+            result = jsonl_to_prompts(file_path, exercise_id)
+
+            if result['status'] == 'success':
+                print(f"{result['prompts_added']} prompts successfully added.")
+                return redirect(request.referrer)
+            else:
+                print(f"Error processing file: {result['message']}")
+                return redirect(request.referrer)
 
         flash('File type not allowed')
         return redirect(request.referrer)
-
-    return app
+    
+    @app.route('/update_prompt', methods=['POST'])
+    def update_prompt():
+        prompt_id = request.form.get('prompt_id')
+        user_prompt = request.form.get('user_prompt')
+        prompt = db.session.query(Prompt).filter_by(prompt_id = prompt_id).first()
+        prompt.user_prompt = user_prompt
+        db.session.commit()
+        return redirect(request.referrer)
         
+    def jsonl_to_prompts(file_path, exercise_id):
+        prompts = []
+        fine_tuning_id = db.session.query(FineTuning).filter_by(exercise_id = exercise_id).first().fine_tuning_id
+        try:
+            with open(file_path, 'r') as file:
+                for line in file:
+                    try:
+                        message = json.loads(line)
+                        system_prompt = message['messages'][0]['content']
+                        user_prompt = message['messages'][1]['content']
+
+                        prompt = Prompt(
+                            system_prompt=system_prompt,
+                            user_prompt=user_prompt,
+                            fine_tuning_id=fine_tuning_id
+                        )
+                        prompts.append(prompt)
+                    except (json.JSONDecodeError, KeyError) as e:
+                        print(f"Skipping invalid line: {e}")
+
+            if prompts:
+                db.session.add_all(prompts)
+                db.session.commit()
+
+            return {'status': 'success', 'prompts_added': len(prompts)}
+
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}
+    
+    @app.route('/export-prompts/<int:exercise_id>', methods=['GET'])
+    def export_prompts(exercise_id):
+        # Example data to write as JSONL
+        fine_tuning_id = db.session.query(FineTuning).filter_by(exercise_id = exercise_id).first().fine_tuning_id
+        prompts = db.session.query(Prompt).filter(Prompt.fine_tuning_id == fine_tuning_id).all()
+        
+        return Response(
+            prompts_to_jsonl(prompts),
+            mimetype='application/jsonl',
+            headers={
+                "Content-Disposition": "attachment;filename=data.jsonl"
+            }
+        )
+        
+    def prompts_to_jsonl(prompts):
+        for prompt in prompts:
+            prompt_data = {
+                "prompt_id": prompt.prompt_id,
+                "user_prompt": prompt.user_prompt,
+                "system_prompt": prompt.system_prompt
+            }
+            yield json.dumps(prompt_data) + "\n"
+                
+    return app
 def create_flask_app():
     return create_app()
 

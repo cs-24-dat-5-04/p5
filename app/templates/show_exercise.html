@@ -11,7 +11,7 @@
             <option value="simple" {{ 'selected' if exercise.exercise_type == 'simple' }}>Simple</option>
             <option value="advanced" {{ 'selected' if exercise.exercise_type == 'advanced' }}>Advanced</option>
         </select>
-        <button type="submit">Save</button>
+        <button type="submit">Save exercise type</button>
     </form>
 </div>
 {% if exercise.exercise_type == 'simple' %}
@@ -49,23 +49,66 @@
 {% endif %}
 {% if exercise.exercise_type == 'advanced' %}
 {% if prompts %}
-{% for prompt in prompts%}
-    <p class="centered">Prompt {{prompt.id }}</p>
-{% endfor %}
+<div class="centered">
+    <div id="prompt-container">
+        <div id="prompt-header">
+            <button id="previous-prompt" onclick="decrementPrompt()">PREV</button>
+            <h3>Prompts <span id="prompt-counter">(1/50)</span></h3>
+            <button id="next-prompt" onclick="incrementPrompt()">NEXT</button>
+        </div>
+        <form action="/update_prompt" method="POST" id="current-prompt-form">
+            <label for="user-prompt">Question</label>
+            <textarea type="text"  name="user_prompt" id="user-prompt"></textarea>
+            <input type="hidden" name="prompt_id" id="prompt-id">
+            <input type="submit" value="Update prompt">
+        </form>
+    </div>
+</div>
 {% else %}
     <em class="centered announcement">No prompts were found.</em>
 {% endif %}
-<div class="centered">
-    <form class="proposal" action="/create_exercise_prompt" method="POST">
-        <button type="submit">New prompt</button>
-    </form>
-</div>
+
+    <!-- <form action="/create_prompt" method="POST" id="new-prompt">
+        <label for="user-prompt">Question</label>
+        <textarea type="text" name="user_prompt"></textarea>
+        <button type="submit">Create prompt</button>
+    </form> -->
+
 <div class="centered">
     <form class="proposal" action="/upload_fine_tuning_file/{{ exercise.exercise_id }}" method="POST" enctype="multipart/form-data">
         <label for="file">Add Fine Tuning File</label>
         <input type="file" id="file" name="file" required>
-        <button type="submit">Upload</button>
+        <button type="submit">Upload fine tuning file</button>
+        <a href="/export-prompts/{{exercise.exercise_id}}">Export prompts</a>
     </form>
 </div>
 {% endif %}
+
+<script>
+    const prompts = {{ prompts | tojson }};
+    let prompt_number = 1;
+
+    function incrementPrompt() {
+        if (prompt_number < prompts.length) {
+            prompt_number += 1;
+            updatePromptContent();
+        }
+    }
+
+    function decrementPrompt() {
+        if (prompt_number > 0) {
+            prompt_number -= 1;
+            updatePromptContent();
+        }
+    }
+
+    function updatePromptContent() {
+        document.getElementById('user-prompt').textContent = prompts[prompt_number-1].user_prompt;
+        document.getElementById('prompt-counter').textContent = `(${prompt_number}/${prompts.length})`;
+        document.getElementById('prompt-id').value = prompts[prompt_number-1].prompt_id;
+    }
+
+    updatePromptContent();
+</script>
+
 {% endblock %}

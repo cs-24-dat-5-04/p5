@@ -4,6 +4,7 @@ class Prompt(db.Model):
     __tablename__ = 'prompt'
     
     prompt_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    system_prompt = db.Column(db.Text, nullable=True)
     user_prompt = db.Column(db.Text, nullable=False)
     completion = db.Column(db.Text, nullable=True)
     fine_tuning_id = db.Column(db.Integer, db.ForeignKey('fine_tuning.fine_tuning_id'))
