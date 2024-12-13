@@ -59,6 +59,8 @@
         <form action="/update_prompt" method="POST" id="current-prompt-form">
             <label for="user-prompt">Question</label>
             <textarea type="text"  name="user_prompt" id="user-prompt"></textarea>
+            <label for="user-prompt">Solution</label>
+            <textarea type="text"  name="assistant_prompt" id="assistant-prompt"></textarea>
             <input type="hidden" name="prompt_id" id="prompt-id">
             <input type="submit" value="Update prompt">
         </form>
@@ -67,12 +69,14 @@
 {% else %}
     <em class="centered announcement">No prompts were found.</em>
 {% endif %}
-
-    <!-- <form action="/create_prompt" method="POST" id="new-prompt">
+<h1>New prompt</h1>
+<div class="centered">
+    <form action="/create_prompt" method="POST" id="new-prompt">
         <label for="user-prompt">Question</label>
         <textarea type="text" name="user_prompt"></textarea>
         <button type="submit">Create prompt</button>
-    </form> -->
+    </form>
+</div>
 
 <div class="centered">
     <form class="proposal" action="/upload_fine_tuning_file/{{ exercise.exercise_id }}" method="POST" enctype="multipart/form-data">
@@ -82,7 +86,14 @@
         <a href="/export-prompts/{{exercise.exercise_id}}">Export prompts</a>
     </form>
 </div>
+<div class="centered">
+    <form action="/finetune" method="post">
+        <input type="hidden" name="fine_tuning_id" id="fine-tuning-id" value="{{ fine_tuning.fine_tuning_id if fine_tuning }}">
+        <input type="submit" value="Fine tune exercise">
+    </form>
+</div>
 {% endif %}
+
 
 <script>
     const prompts = {{ prompts | tojson }};
@@ -104,6 +115,7 @@
 
     function updatePromptContent() {
         document.getElementById('user-prompt').textContent = prompts[prompt_number-1].user_prompt;
+        document.getElementById('assistant-prompt').textContent = prompts[prompt_number-1].assistant_prompt;
         document.getElementById('prompt-counter').textContent = `(${prompt_number}/${prompts.length})`;
         document.getElementById('prompt-id').value = prompts[prompt_number-1].prompt_id;
     }

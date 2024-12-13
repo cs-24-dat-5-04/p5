@@ -6,8 +6,9 @@ class Prompt(db.Model):
     prompt_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     system_prompt = db.Column(db.Text, nullable=True)
     user_prompt = db.Column(db.Text, nullable=False)
+    assistant_prompt = db.Column(db.Text, nullable=True)
     completion = db.Column(db.Text, nullable=True)
-    fine_tuning_id = db.Column(db.Integer, db.ForeignKey('fine_tuning.fine_tuning_id'))
+    fine_tuning_id = db.Column(db.Integer, db.ForeignKey('fine_tuning.fine_tuning_id'), nullable=True)
 
     solutions = db.relationship(
         'Exercise',

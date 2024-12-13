@@ -1,5 +1,6 @@
 import random
 import string
+import time
 from flask import Flask, Response, flash, jsonify, redirect, render_template, request
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,6 +38,11 @@ def create_app():
     db.init_app(app)
     with app.app_context():
         db.create_all()
+        client = OpenAI(
+        organization = secrets["organization"],
+        project = secrets["project"],
+        api_key = secrets["api_key"],
+        )
         # Populate Semester
         existing_semester = Semester.query.filter_by(semester_name='DAT5').first()
         if not existing_semester: 
@@ -72,11 +78,6 @@ def create_app():
 
     def complete(system_prompt, user_prompt):
         model = 'gpt-4o-mini'
-        client = OpenAI(
-        organization = secrets["organization"],
-        project = secrets["project"],
-        api_key = secrets["api_key"],
-        )
 
         completion = client.chat.completions.create(
             model=model,
@@ -375,14 +376,15 @@ def create_app():
     def show_exercise(exercise_id):
         exercise = db.session.query(Exercise).filter_by(exercise_id = exercise_id).first()
         prompts = None
+        fine_tuning = None
         if exercise.exercise_type == 'advanced':
             fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise.exercise_id).first()
             if fine_tuning:
                     prompts = [
-        {'prompt_id': p.prompt_id, 'system_prompt': p.system_prompt, 'user_prompt': p.user_prompt}
-        for p in db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
-    ]
-        return render_template('show_exercise.html', exercise=exercise, prompts=prompts, active_page='exercise')
+                    {'prompt_id': p.prompt_id, 'system_prompt': p.system_prompt, 'user_prompt': p.user_prompt, 'assistant_prompt': p.assistant_prompt}
+                    for p in db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
+                    ]
+        return render_template('show_exercise.html', exercise=exercise, prompts=prompts, active_page='exercise', fine_tuning=fine_tuning)
 
     @app.route('/update_exercise/<int:exercise_id>', methods=['POST'])
     def update_exercise(exercise_id):
@@ -428,6 +430,36 @@ def create_app():
             
         return redirect(request.referrer)
 
+    @app.route('/finetune', methods=['POST'])
+    def finetune():
+        fine_tuning_id = request.form.get('fine_tuning_id')
+        fine_tuning = db.session.query(FineTuning).filter_by(fine_tuning_id = fine_tuning_id).first()
+        prompts = db.session.query(Prompt).filter(Prompt.fine_tuning_id == fine_tuning_id).all()
+        filename = f'{fine_tuning.exercise.lesson.course.semester.semester_name}-{fine_tuning.exercise.lesson.course.course_year}-{fine_tuning.exercise.lesson.course.course_name}-L{fine_tuning.exercise.lesson.lesson_number}-E{fine_tuning.exercise.exercise_number}.jsonl'
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        with open(file_path, "w") as file:
+            for line in prompts_to_jsonl(prompts):
+                file.write(line)
+                
+        
+        training_data = client.files.create(
+            file=open(file_path, "rb"),
+            purpose="fine-tune"
+        )
+        response = client.fine_tuning.jobs.create(
+        training_file=training_data.id, 
+        model="gpt-4o-mini-2024-07-18"
+        )
+        
+        status = client.fine_tuning.jobs.retrieve(response.id).status
+        while status != "succeeded" and status != "failed" and status != "cancelled":
+            time.sleep(5)
+            status = client.fine_tuning.jobs.retrieve(response.id).status
+            print(f"Status: {status}")
+
+        return redirect(request.referrer)
+
     def complete_prompt(user_prompt, system_prompt, prompt_id=None):
         if prompt_id:
             print(f'Prompt ID: {prompt_id}')
@@ -444,11 +476,11 @@ def create_app():
         return completion, prompt.prompt_id
 
     def validate_proposed_solution(question, solution, proposed_solution):
-        system_prompt = 'Only reply with "yes" or "no". Nothing else.'
+        system_prompt = 'Only reply with "True" or "False". Nothing else.'
         user_prompt = f'{solution} is the solution to the question: {question}. Is {proposed_solution} also a valid solution to the question?'
         completion = complete(system_prompt, user_prompt)
         print(user_prompt)
-        answer = re.search(r'yes', completion, re.IGNORECASE) is not None
+        answer = re.search(r'True', completion, re.IGNORECASE) is not None
         print(f'Answer: {answer}')
         return answer
         
@@ -520,10 +552,12 @@ def create_app():
                         message = json.loads(line)
                         system_prompt = message['messages'][0]['content']
                         user_prompt = message['messages'][1]['content']
+                        assistant_prompt = message['messages'][2]['content']
 
                         prompt = Prompt(
                             system_prompt=system_prompt,
                             user_prompt=user_prompt,
+                            assistant_prompt=assistant_prompt,
                             fine_tuning_id=fine_tuning_id
                         )
                         prompts.append(prompt)
@@ -555,14 +589,17 @@ def create_app():
         
     def prompts_to_jsonl(prompts):
         for prompt in prompts:
-            prompt_data = {
-                "prompt_id": prompt.prompt_id,
-                "user_prompt": prompt.user_prompt,
-                "system_prompt": prompt.system_prompt
+            prompt_data = { 
+                "messages": [        
+                    {"role": "system", "content": prompt.system_prompt}, 
+                    {"role": "user", "content": prompt.user_prompt},
+                    {"role": "assistant", "content": prompt.assistant_prompt}
+                ]
             }
             yield json.dumps(prompt_data) + "\n"
-                
+      
     return app
+
 def create_flask_app():
     return create_app()
 
