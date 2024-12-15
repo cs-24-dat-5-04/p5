@@ -21,7 +21,7 @@ def create_app():
     with open('secrets.json', 'r') as file:
         secrets = json.load(file)
     app.config['SECRET_KEY'] = secrets["csrf_token"]
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(app.instance_path, 'database.db')}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(app.instance_path, "database.db")}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Max file size = 16MB
