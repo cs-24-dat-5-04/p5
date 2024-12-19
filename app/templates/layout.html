@@ -13,9 +13,8 @@
             <a href="{{ url_for('dashboard') }}" class="{% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
             <a href="{{ url_for('semester') }}" class="{% if active_page == 'semester' %}active{% endif %}">Semesters</a>
             <a href="{{ url_for('course') }}" class="{% if active_page == 'course' %}active{% endif %}">Courses</a>
-            <a href="{{ url_for('lesson') }}" class="{% if active_page == 'lesson' %}active{% endif %}">Lessons</a>
+            <a href="{{ url_for('lecture') }}" class="{% if active_page == 'lecture' %}active{% endif %}">Lectures</a>
             <a href="{{ url_for('exercise') }}" class="{% if active_page == 'exercise' %}active{% endif %}">Exercises</a>
-            <a href="{{ url_for('prompt') }}" class="{% if active_page == 'prompt' %}active{% endif %}">Prompts</a>
         </nav>
     </header>
     <main>

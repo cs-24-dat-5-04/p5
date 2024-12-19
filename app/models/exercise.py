@@ -9,7 +9,7 @@ class Exercise(db.Model):
     exercise_content = db.Column(db.Text, nullable=True)
     exercise_solution = db.Column(db.Text, nullable=True)
     exercise_type = db.Column(db.Text, default="simple")
-    lesson_id = db.Column(db.Integer, db.ForeignKey('lesson.lesson_id'), nullable=False)
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)
     proposed_solution_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
     proposed_new_question_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
     proposed_new_solution_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
@@ -18,7 +18,7 @@ class Exercise(db.Model):
     proposed_new_solution_validation = db.Column(db.Boolean, nullable=True)
     
     # Relationships
-    lesson = db.relationship('Lesson', back_populates='exercises')
+    lecture = db.relationship('Lecture', back_populates='exercises')
     proposed_solution = db.relationship(
         'Prompt',
         foreign_keys=[proposed_solution_id],

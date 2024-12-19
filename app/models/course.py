@@ -8,7 +8,7 @@ class Course(db.Model):
     semester_id = db.Column(db.Integer, db.ForeignKey('semester.semester_id'), nullable=False)
     
     semester = db.relationship('Semester', back_populates='courses')
-    lessons = db.relationship('Lesson', back_populates='course', cascade='all, delete-orphan')
+    lectures = db.relationship('Lecture', back_populates='course', cascade='all, delete-orphan')
 
     def __repr__(self):
         return f"{self.course_name}"

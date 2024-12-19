@@ -151,66 +151,6 @@ ul, ol {
     list-style: none;
 }
 
-.dropdown {
-    display: flex;
-    justify-content: center;
-}
-
-.dropdown ul {
-    text-align: center;
-    border-radius: 0.5rem;
-    position: relative;
-    overflow: inherit;
-    padding: 1rem;
-    width: max-content;
-    box-sizing: border-box;
-    user-select: none;
-}
-
-.dropdown .title {
-    margin-top: 0;
-    border: 2px solid white;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    background: white;
-    color: black;
-}
-
-.dropdown ul:hover .title {
-    border-radius: 0.5rem 0.5rem 0 0;
-}
-
-.dropdown ul li {
-    display: none;
-}
-
-.dropdown ul:hover li {
-    display: block;
-    padding: 0.5rem;
-    width: 100%;
-    border-left: 2px solid white;
-    border-right: 2px solid white;
-    border-top: 2px solid white;
-    box-sizing: border-box;
-}
-
-
-.dropdown ul:hover li:first-of-type {
-    border-top: 0;
-}
-
-.dropdown ul:hover li:last-of-type {
-    border-bottom: 2px solid white;
-    border-bottom-left-radius: 0.5rem;
-    border-bottom-right-radius: 0.5rem;
-}
-
-.dropdown ul:hover li:hover {
-    background: #333;
-    cursor: pointer;
-    width: 100%;
-}
-
 .swiper {
     display: flex;
     justify-content: center;

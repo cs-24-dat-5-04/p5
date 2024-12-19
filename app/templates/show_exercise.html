@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Course{% endblock %}
+{% block title %}Exercise #{{exercise.exercise_number}}{% endblock %}
 
 {% block content %}
 <h1>{{ exercise }}</h1>
@@ -28,7 +28,7 @@
     <form class="proposal" action="/generate_proposed_solution" method="POST">
         <label for="exercise_solution">Proposed solution</label>
         <textarea class="{% if exercise.proposed_solution_validation == 1 %}valid{% endif %}{% if exercise.proposed_solution_validation == 0 %}invalid{% endif %}" readonly type="text" name="prompt_solution" rows="2" cols="50">{% if exercise.exercise_content is not none %}{{ exercise.proposed_solution_id | get_prompt_completion() }}{% endif %}</textarea>
-        <input type="hidden" name="system_prompt" value="{{ exercise.lesson_id | get_system_prompt_from_lesson() }}">
+        <input type="hidden" name="system_prompt" value="{{ exercise.lecture_id | get_system_prompt_from_lecture() }}">
         <input type="hidden" name="user_prompt" value="{% if exercise.exercise_content is not none %}{{ exercise.exercise_content }}{% endif %}">
         <input type="hidden" name="prompt_id" value="{% if exercise.proposed_solution_id is not none %}{{ exercise.proposed_solution_id }}{% endif %}">
         <input type="hidden" name="exercise_id" value="{{ exercise.exercise_id }}">
@@ -89,7 +89,7 @@
 <div class="centered">
     <form action="/finetune" method="post">
         <input type="hidden" name="fine_tuning_id" id="fine-tuning-id" value="{{ fine_tuning.fine_tuning_id if fine_tuning }}">
-        <input type="submit" value="Fine tune exercise">
+        <input type="submit" value="Fine tune exercise" onclick="alert('This may take a couple of minutes. If the browser is trying to refresh the page it means it is working!')">
     </form>
 </div>
 {% endif %}

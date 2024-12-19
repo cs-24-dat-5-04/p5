@@ -34,17 +34,24 @@ choco install git
  ```
 3. Open the **📁p5 folder** in VSCode
 4. Install dependencies using `pip install -r requirements.txt`
-4. Run `server.py` and go to http://127.0.0.1:5000/
-
-## How to set up the Database
-1. Open your terminal and head to the **📁database folder**.
-
-2. Run `db_init.py` using Python to initiate and populate the database.
+5. Create the `secrets.json` file in the root of the project folder.
+You will need an API key from OpenAI: https://platform.openai.com
+The structure of the JSON file is as follows:
+```json
+{ 
+    "csrf_token": "abc123",
+    "organization": "org-HASH",
+    "project": "proj_HASH",
+    "api_key": "sk-proj-HASH"
+}
+```
+6. Run the server using `flask run` and go to http://127.0.0.1:5000/
 
 ## Reading database
 ### Prerequisite
  - DB browser for SQlite
  1. download and install from https://sqlitebrowser.org/dl/.
+
 ### Running the database
  - Open DB browser
  - Press `Open database`
@@ -53,3 +60,4 @@ choco install git
  - Refresh in DB browser any time you change the DB in the code, in order to see updates
 Alternatively, if you're running Linux, simply run this command in the project:
 ```sqlitebrowser database.db```
+
