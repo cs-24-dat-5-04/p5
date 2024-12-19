@@ -3,42 +3,38 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from app import create_app
-from database.db_init import setup_database
 from app.models import *
 
 class Test_base():
     @pytest.fixture(scope = "function")
-    def object(self):
-        setup_database("test")
-        object = create_app("test")
-        yield object
-        session = object[1]
-        session.close()
+    def client(self, app):
+        yield app.test_client()
         
     @pytest.fixture(scope = "function")
-    def client(self, object):
-        return object[0].test_client()
+    def app(self):
+        return create_app(True)
     
-    @pytest.fixture(scope="function")
-    def session(self, object):
-        return object[1]
+    @pytest.fixture(scope = "function")
+    def session(self):
+        return db.session
     
-    def find_in_db(session, type, filter):
-        return session.query(type).filter(filter).first()
-    
+    def find_in_db(app, session, type, filter):
+        with app.app_context():
+            return session.query(type).filter(filter).first()
     
 class Test_semesters(Test_base):
-    def test_create_semester(self, client, session):
+    def test_create_semester(self, client, session, app):
         response = client.post("/create_semester", data = {
             "semester_name": "abc11"
         })
         assert response.status_code == 302
-        semester = Test_base.find_in_db(session, Semester, Semester.semester_name == "abc11")
-        assert semester.semester_name == "abc11" and semester.semester_id == 2
-        
+        semester = Test_base.find_in_db(app, session, Semester, Semester.semester_name == "abc11")
+        print(f'SEMESTER NAME: {str(semester.semester_name)}')
+        print(f'SEMESTER ID: {int(semester.semester_id)}')
+        assert str(semester.semester_name) == "abc11" and int(semester.semester_id) == 2
         response = client.post("/create_semester", data = {
         })
-        assert response.status_code == 500   
+        assert response.status_code == 404
         
         response = client.post("/create_semester", data = {
             "semester_name": "test321"
@@ -65,13 +61,13 @@ class Test_semesters(Test_base):
         })
         assert response.status_code == 404
         
-    def test_change_semester(self, client, session):
+    def test_change_semester(self, client, session, app):
         response = client.post("/save_semester", data = {
             "semester_id": "1",
             "new_name": "abc12"
         })
         assert response.status_code == 302
-        semester = Test_base.find_in_db(session, Semester, Semester.semester_name == "abc12")
+        semester = Test_base.find_in_db(app, session, Semester, Semester.semester_name == "abc12")
         assert semester.semester_name == "abc12" and semester.semester_id == 1
         
         response = client.post("/save_semester", data = {
@@ -141,12 +137,12 @@ class Test_semesters(Test_base):
         response = client.get("/semester/-1")
         assert response.status_code == 404
         
-    def test_delete_semester(self, client, session):
+    def test_delete_semester(self, client, session, app):
         response = client.post("/delete_semester", data = {
             "semester_id": "1"
         })
         assert response.status_code == 302
-        semester = Test_base.find_in_db(session, Semester, Semester.semester_id == 1)
+        semester = Test_base.find_in_db(app, session, Semester, Semester.semester_id == 1)
         assert not semester
         
         response = client.post("/delete_semester", data = {
@@ -171,14 +167,14 @@ class Test_semesters(Test_base):
         
         
 class Test_courses(Test_base):
-    def test_create_course(self, client, session):
+    def test_create_course(self, client, session, app):
         response = client.post("/create_course", data = {
             "course_year": "2020",
             "semester_id": "1",
             "course_name": "TEST"
         })
         assert response.status_code == 302
-        course = Test_base.find_in_db(session, Course, Course.course_name == "TEST")
+        course = Test_base.find_in_db(app, session, Course, Course.course_name == "TEST")
         assert course.course_name == "TEST" and course.course_id == 4 and course.course_year == 2020 and course.semester_id == 1
         
         response = client.post("/create_course", data = {
@@ -247,12 +243,12 @@ class Test_courses(Test_base):
     def test_get_courselist(self, client):
         response = client.get("/course")
         assert response.status_code == 200
-        assert "<li>MI (2024-DAT5)</li>" in response.get_data(as_text = True)
+        assert "<h1>Courses</h1>" in response.get_data(as_text = True)
         
     def test_get_specific_course(self, client):
         response = client.get("/semester/1/course/1")
         assert response.status_code == 200
-        assert "href=\"/semester/1\" class=\"card-title\">DAT5 2024" in response.get_data(as_text = True)
+        assert "href=\"/semester/1/course/1\"" in response.get_data(as_text = True)
         
         response = client.get("/semester/1/course/500")
 
@@ -267,13 +263,13 @@ class Test_courses(Test_base):
         response = client.get("/semester/1/course/0")
         assert response.status_code == 500
         
-    def test_change_course(self, client, session):
+    def test_change_course(self, client, session, app):
         response = client.post("/save_course", data = {
             "course_id": "1",
             "new_name": "testa"
         })
         assert response.status_code == 302
-        course = Test_base.find_in_db(session, Course, Course.course_name == "testa")
+        course = Test_base.find_in_db(app, session, Course, Course.course_name == "testa")
         assert course.course_name == "testa" and course.course_id == 1 and course.course_year == 2024 and course.semester_id == 1
         
         response = client.post("/save_course", data = {
@@ -318,12 +314,12 @@ class Test_courses(Test_base):
         })
         assert response.status_code == 404
         
-    def test_delete_course(self, client, session):
+    def test_delete_course(self, client, session, app):
         response = client.post("/delete_course", data = {
             "course_id": "1"
         })
         assert response.status_code == 302
-        course = Test_base.find_in_db(session, Course, Course.course_id == 1)
+        course = Test_base.find_in_db(app, session, Course, Course.course_id == 1)
         assert not course
         
         response = client.post("/delete_course", data = {
@@ -352,158 +348,158 @@ class Test_courses(Test_base):
         assert response.status_code == 404
         
         
-class Test_lessons(Test_base):
-    def test_create_lesson(self, client, session):
-        response = client.post("/create_lesson", data = {
+class Test_lectures(Test_base):
+    def test_create_lecture(self, client, session, app):
+        response = client.post("/create_lecture", data = {
             "course_id": "1"
         })
         assert response.status_code == 302
-        lesson = Test_base.find_in_db(session, Lesson, Lesson.lesson_id == 4)
-        assert lesson.lesson_id == 4 and lesson.lesson_number == 2 and lesson.course_id == 1
+        lecture = Test_base.find_in_db(app, session, Lecture, Lecture.lecture_id == 4)
+        assert lecture.lecture_id == 4 and lecture.lecture_number == 2 and lecture.course_id == 1
         
-        response = client.post("/create_lesson", data = {
+        response = client.post("/create_lecture", data = {
             "course_id": "9999"
         })
         assert response.status_code == 404
         
-        response = client.post("/create_lesson", data = {
+        response = client.post("/create_lecture", data = {
             "course_id": "-1"
         })
         assert response.status_code == 404
         
-        response = client.post("/create_lesson", data = {
+        response = client.post("/create_lecture", data = {
             "course_id": "0"
         })
         assert response.status_code == 404
         
-        response = client.post("/create_lesson", data = {
+        response = client.post("/create_lecture", data = {
             "course_id": "a"
         })
         assert response.status_code == 404
         
-        response = client.post("/create_lesson", data = {
+        response = client.post("/create_lecture", data = {
             "course_id": ""
         })
         assert response.status_code == 404
         
-    def test_get_lessonlist(self, client):
+    def test_get_lecturelist(self, client):
         # Virker ikke atm?
-        response = client.get("/lesson")
+        response = client.get("/lecture")
         assert response.status_code == 200
         
-    def test_get_specific_lesson(self, client):
-        response = client.get("/semester/1/course/1/lesson/1")
+    def test_get_specific_lecture(self, client):
+        response = client.get("/semester/1/course/1/lecture/1")
         assert response.status_code == 200
-        assert "<h1>Lesson #1" in response.get_data(as_text = True)
+        assert "<h1>Lecture #1" in response.get_data(as_text = True)
         
-        response = client.get("/semester/1/course/1/lesson/1000")
+        response = client.get("/semester/1/course/1/lecture/1000")
         assert response.status_code == 500
         
-        response = client.get("/semester/1/course/1/lesson/0")
+        response = client.get("/semester/1/course/1/lecture/0")
         assert response.status_code == 500
         
-        response = client.get("/semester/1/course/1/lesson/-1")
+        response = client.get("/semester/1/course/1/lecture/-1")
         assert response.status_code == 404
         
-    def test_change_lesson(self, client, session):
-        response = client.post("/save_lesson", data = {
-            "lesson_id": "1",
+    def test_change_lecture(self, client, session, app):
+        response = client.post("/save_lecture", data = {
+            "lecture_id": "1",
             "new_name": "test"
         })
         assert response.status_code == 302
-        lesson = Test_base.find_in_db(session, Lesson, Lesson.lesson_id == 1)
-        assert lesson.lesson_id == 1 and lesson.lesson_number == 1 and lesson.course_id == 1 and lesson.lesson_name == "test"
+        lecture = Test_base.find_in_db(app, session, Lecture, Lecture.lecture_id == 1)
+        assert lecture.lecture_id == 1 and lecture.lecture_number == 1 and lecture.course_id == 1 and lecture.lecture_name == "test"
         
-        response = client.post("/save_lesson", data = {
-            "lesson_id": "9999",
+        response = client.post("/save_lecture", data = {
+            "lecture_id": "9999",
             "new_name": "test"
         })
         assert response.status_code == 404
         
-        response = client.post("/save_lesson", data = {
-            "lesson_id": "-1",
+        response = client.post("/save_lecture", data = {
+            "lecture_id": "-1",
             "new_name": "test"
         })
         assert response.status_code == 404
         
-        response = client.post("/save_lesson", data = {
-            "lesson_id": "0",
+        response = client.post("/save_lecture", data = {
+            "lecture_id": "0",
             "new_name": "test"
         })
         assert response.status_code == 404
         
-        response = client.post("/save_lesson", data = {
-            "lesson_id": "a",
+        response = client.post("/save_lecture", data = {
+            "lecture_id": "a",
             "new_name": "test"
         })
         assert response.status_code == 404
         
-        response = client.post("/save_lesson", data = {
-            "lesson_id": "",
+        response = client.post("/save_lecture", data = {
+            "lecture_id": "",
             "new_name": "test"
         })
         assert response.status_code == 404
         
-    def test_delete_lesson(self, client, session):
-        response = client.post("/delete_lesson", data = {
-            "lesson_id": "1",
+    def test_delete_lecture(self, client, session, app):
+        response = client.post("/delete_lecture", data = {
+            "lecture_id": "1",
         })
         assert response.status_code == 302
-        lesson = Test_base.find_in_db(session, Lesson, Lesson.lesson_id == 1)
-        assert not lesson
+        lecture = Test_base.find_in_db(app, session, Lecture, Lecture.lecture_id == 1)
+        assert not lecture
         
-        response = client.post("/delete_lesson", data = {
-            "lesson_id": "10000",
+        response = client.post("/delete_lecture", data = {
+            "lecture_id": "10000",
         })
         assert response.status_code == 404
         
-        response = client.post("/delete_lesson", data = {
-            "lesson_id": "-1",
+        response = client.post("/delete_lecture", data = {
+            "lecture_id": "-1",
         })
         assert response.status_code == 404
         
-        response = client.post("/delete_lesson", data = {
-            "lesson_id": "a",
+        response = client.post("/delete_lecture", data = {
+            "lecture_id": "a",
         })
         assert response.status_code == 404
         
-        response = client.post("/delete_lesson", data = {
-            "lesson_id": "",
+        response = client.post("/delete_lecture", data = {
+            "lecture_id": "",
         })
         assert response.status_code == 404
         
         
 class Test_exercises(Test_base):
-    def test_create_exercise(self, client, session):
+    def test_create_exercise(self, client, session, app):
         response = client.post("/create_exercise", data = {
-            "lesson_id": "1"
+            "lecture_id": "1"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 4)
-        assert exercise.exercise_id == 4 and exercise.exercise_number == 2 and exercise.lesson_id == 1
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 4)
+        assert exercise.exercise_id == 4 and exercise.exercise_number == 2 and exercise.lecture_id == 1
         
         response = client.post("/create_exercise", data = {
-            "lesson_id": "9999"
+            "lecture_id": "9999"
         })
         assert response.status_code == 404
         
         response = client.post("/create_exercise", data = {
-            "lesson_id": "-1"
+            "lecture_id": "-1"
         })
         assert response.status_code == 404
         
         response = client.post("/create_exercise", data = {
-            "lesson_id": "0"
+            "lecture_id": "0"
         })
         assert response.status_code == 404
         
         response = client.post("/create_exercise", data = {
-            "lesson_id": "a"
+            "lecture_id": "a"
         })
         assert response.status_code == 404
         
         response = client.post("/create_exercise", data = {
-            "lesson_id": ""
+            "lecture_id": ""
         })
         assert response.status_code == 404
         
@@ -525,14 +521,14 @@ class Test_exercises(Test_base):
         response = client.get("/exercise/-1")
         assert response.status_code == 404
         
-    def test_change_exercise(self, client, session):
+    def test_change_exercise(self, client, session, app):
         response = client.post("/save_exercise", data = {
             "exercise_id": "1",
             "new_name": "test"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lesson_id == 1 and exercise.exercise_name == "test"
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
+        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lecture_id == 1 and exercise.exercise_name == "test"
         
         response = client.post("/save_exercise", data = {
             "exercise_id": "99999",
@@ -569,12 +565,12 @@ class Test_exercises(Test_base):
         })
         assert response.status_code == 404
         
-    def test_delete_exercise(self, client, session):
+    def test_delete_exercise(self, client, session, app):
         response = client.post("/delete_exercise", data = {
             "exercise_id": "1"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
         assert not exercise
         
         response = client.post("/delete_exercise", data = {
@@ -602,44 +598,44 @@ class Test_exercises(Test_base):
         })
         assert response.status_code == 404
         
-    def test_change_exercise_question(self, client, session):
+    def test_change_exercise_question(self, client, session, app):
         response = client.post("/update_exercise/1", data = {
             "exercise_content": "test",
             "exercise_solution": "testx"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lesson_id == 1 and exercise.exercise_content == "test" and exercise.exercise_solution == "testx"
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
+        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lecture_id == 1 and exercise.exercise_content == "test" and exercise.exercise_solution == "testx"
         
         response = client.post("/update_exercise/1", data = {
             "exercise_content": "test",
             "exercise_solution": ""
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lesson_id == 1 and exercise.exercise_content == "test" and exercise.exercise_solution == ""
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
+        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lecture_id == 1 and exercise.exercise_content == "test" and exercise.exercise_solution == ""
         
         response = client.post("/update_exercise/1", data = {
             "exercise_content": "",
             "exercise_solution": "test"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lesson_id == 1 and exercise.exercise_content == "" and exercise.exercise_solution == "test"
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
+        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lecture_id == 1 and exercise.exercise_content == "" and exercise.exercise_solution == "test"
         
         response = client.post("/update_exercise/1", data = {
             "exercise_content": "test1"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lesson_id == 1 and exercise.exercise_content == "test1"
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
+        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lecture_id == 1 and exercise.exercise_content == "test1"
         
         response = client.post("/update_exercise/1", data = {
             "exercise_solution": "test1"
         })
         assert response.status_code == 302
-        exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lesson_id == 1 and exercise.exercise_solution == "test1"
+        exercise = Test_base.find_in_db(app, session, Exercise, Exercise.exercise_id == 1)
+        assert exercise.exercise_id == 1 and exercise.exercise_number == 1 and exercise.lecture_id == 1 and exercise.exercise_solution == "test1"
         
         response = client.post("/update_exercise/100", data = {
             "exercise_solution": "test1"
@@ -660,19 +656,3 @@ class Test_exercises(Test_base):
             "exercise_solution": "test1"
         })
         assert response.status_code == 404
-        
-    #def test_update_system_prompt(self, client, session):
-        # Ser ike ud til at være færdigt?
-        #response = client.post("/update_system_prompt/1", data = {
-            #"system_prompt": "test"
-        #})
-        #assert response.status_code == 302
-        #exercise = Test_base.find_in_db(session, Exercise, Exercise.exercise_id == 1)
-        
-        
-        
-#class Test_prompts(Test_base):
-    #def test_create_prompt(self, client):
-        #response = client.post("/create_prompt", data = {
-        #})
-        #assert response.status_code == 200

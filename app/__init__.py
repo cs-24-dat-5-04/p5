@@ -12,13 +12,17 @@ import re
 import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-def create_app():
+def create_app(test = False):
     app = Flask(__name__)
     with open('secrets.json', 'r') as file:
         secrets = json.load(file)
     app.config['SECRET_KEY'] = secrets["csrf_token"]
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(app.instance_path, "database.db")}'
+    if test == False:
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(app.instance_path, "database.db")}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    if test == True:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+        app.config['TESTING'] = True
     app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
     app.config['UPLOAD_FOLDER'] = 'uploads'
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -30,6 +34,14 @@ def create_app():
         project = secrets["project"],
         api_key = secrets["api_key"],
         )
+        if test == True:
+            Semester.query.delete()
+            Course.query.delete()
+            Exercise.query.delete()
+            FineTuning.query.delete()
+            Lecture.query.delete()
+            Prompt.query.delete()
+            SystemPrompt.query.delete()
         existing_semester = Semester.query.filter_by(semester_name='DAT5').first()
         if not existing_semester: 
             semester = Semester(semester_name='DAT5')
@@ -163,10 +175,13 @@ def create_app():
     @app.route('/semester/<int:semester_id>/course/<int:course_id>', methods=['GET', 'POST'])
     def show_course(semester_id, course_id):
         course = db.session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_id == course_id)).first()
-        lecture_list = db.session.query(Lecture).filter(Lecture.course_id == course_id)
-        course_list = db.session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course.course_year))
-        semester = db.session.query(Semester).filter(Semester.semester_id == semester_id).first()
-        return render_template('show_course.html', course=course, semester=semester, lecture_list=lecture_list, course_list=course_list, active_course_id=course_id)
+        if course:
+            lecture_list = db.session.query(Lecture).filter(Lecture.course_id == course_id)
+            course_list = db.session.query(Course).filter(and_(Course.semester_id == semester_id, Course.course_year == course.course_year))
+            semester = db.session.query(Semester).filter(Semester.semester_id == semester_id).first()
+        else:
+            return render_template('500.html'), 500
+        return render_template('show_course.html', course=course, semester=semester, lecture_list=lecture_list, course_list=course_list, active_course_id=course_id, active_page='course')
 
     @app.route('/exercise', methods=['GET'])
     def exercise():
@@ -181,9 +196,15 @@ def create_app():
     @app.route('/semester/<int:semester_id>/course/<int:course_id>/lecture/<int:lecture_number>', methods=['GET', 'POST'])
     def show_lecture(semester_id, course_id, lecture_number):
         course = db.session.query(Course).filter(Course.course_id == course_id).first()
-        lecture = db.session.query(Lecture).filter(and_(Lecture.course_id == course_id, Lecture.lecture_number == lecture_number)).first()
-        exercise_list = db.session.query(Exercise).filter(Exercise.lecture_id == lecture.lecture_id)
-        system_prompt = db.session.query(SystemPrompt).filter_by(lecture_id = lecture.lecture_id).first()
+        if course:
+            lecture = db.session.query(Lecture).filter(and_(Lecture.course_id == course_id, Lecture.lecture_number == lecture_number)).first()
+            if lecture:
+                exercise_list = db.session.query(Exercise).filter(Exercise.lecture_id == lecture.lecture_id)
+                system_prompt = db.session.query(SystemPrompt).filter_by(lecture_id = lecture.lecture_id).first()
+            else:
+                return render_template('500.html'), 500
+        else:
+            return render_template('500.html'), 500
         return render_template('show_lecture.html', course=course, lecture=lecture, lecture_id=lecture.lecture_id, exercise_list=exercise_list, system_prompt=system_prompt, active_page='lecture')
 
     @app.errorhandler(404)
@@ -225,9 +246,11 @@ def create_app():
     @app.route('/create_semester', methods=['POST'])
     def create_semester():
         semester_name = request.form.get('semester_name')
-        match = re.search(r"[A-Za-z][A-Za-z]?[A-Za-z]?\d\d?", semester_name)
+        if semester_name:
+            match = re.search(r"[A-Za-z][A-Za-z]?[A-Za-z]?\d\d?", semester_name)
+        else:
+            return redirect(request.referrer, 404)
         if match and match.group() == semester_name and len(semester_name) <= 5:
-            print(321321)
             semester = Semester(semester_name = semester_name)
             db.session.add(semester)
             db.session.commit()
@@ -358,15 +381,18 @@ def create_app():
     @app.route('/exercise/<int:exercise_id>', methods=['GET', 'POST'])
     def show_exercise(exercise_id):
         exercise = db.session.query(Exercise).filter_by(exercise_id = exercise_id).first()
-        prompts = None
-        fine_tuning = None
-        if exercise.exercise_type == 'advanced':
-            fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise.exercise_id).first()
-            if fine_tuning:
-                    prompts = [
-                    {'prompt_id': p.prompt_id, 'system_prompt': p.system_prompt, 'user_prompt': p.user_prompt, 'assistant_prompt': p.assistant_prompt}
-                    for p in db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
-                    ]
+        if exercise:
+            prompts = None
+            fine_tuning = None
+            if exercise.exercise_type == 'advanced':
+                fine_tuning = db.session.query(FineTuning).filter_by(exercise_id = exercise.exercise_id).first()
+                if fine_tuning:
+                        prompts = [
+                        {'prompt_id': p.prompt_id, 'system_prompt': p.system_prompt, 'user_prompt': p.user_prompt, 'assistant_prompt': p.assistant_prompt}
+                        for p in db.session.query(Prompt).filter(Prompt.fine_tuning.has(fine_tuning_id=fine_tuning.fine_tuning_id)).all()
+                        ]
+        else:
+            return render_template('500.html'), 500
         return render_template('show_exercise.html', exercise=exercise, prompts=prompts, active_page='exercise', fine_tuning=fine_tuning)
 
     @app.route('/update_exercise/<int:exercise_id>', methods=['POST'])
@@ -585,5 +611,5 @@ def create_flask_app():
     return create_app()
 
 if __name__ == '__main__':
-    app = create_app()
+    app = create_app(True)
     app.run(debug=True)
