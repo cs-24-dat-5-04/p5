@@ -1,28 +1,41 @@
-from sqlalchemy import Column, Integer, Boolean, Text, ForeignKey
-from sqlalchemy.orm import relationship, declarative_base
-from .base import Base
+from . import db
 
-class Exercise(Base):
+class Exercise(db.Model):
     __tablename__ = 'exercise'
     
-    exercise_id = Column(Integer, autoincrement=True, primary_key=True)
-    exercise_name = Column(Text, nullable=True)
-    exercise_number = Column(Integer, nullable=False)
-    exercise_content = Column(Text, nullable=True)
-    exercise_solution = Column(Text, nullable=True)
-    lesson_id = Column(Integer, ForeignKey('lesson.lesson_id'), nullable=False)
-    proposed_solution_id = Column(Integer, ForeignKey('prompt.prompt_id'), nullable=True)
-    proposed_new_question_id = Column(Integer, ForeignKey('prompt.prompt_id'), nullable=True)
-    proposed_new_solution_id = Column(Integer, ForeignKey('prompt.prompt_id'), nullable=True)
-    proposed_solution_validation = Column(Boolean, nullable=True)
-    proposed_new_question_validation = Column(Boolean, nullable=True)
-    proposed_new_solution_validation = Column(Boolean, nullable=True)
+    exercise_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    exercise_name = db.Column(db.Text, nullable=True)
+    exercise_number = db.Column(db.Integer, nullable=False)
+    exercise_content = db.Column(db.Text, nullable=True)
+    exercise_solution = db.Column(db.Text, nullable=True)
+    exercise_type = db.Column(db.Text, default="simple")
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'), nullable=False)
+    proposed_solution_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
+    proposed_new_question_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
+    proposed_new_solution_id = db.Column(db.Integer, db.ForeignKey('prompt.prompt_id'), nullable=True)
+    proposed_solution_validation = db.Column(db.Boolean, nullable=True)
+    proposed_new_question_validation = db.Column(db.Boolean, nullable=True)
+    proposed_new_solution_validation = db.Column(db.Boolean, nullable=True)
     
-    lesson = relationship('Lesson', back_populates='exercises')
-    proposed_solution = relationship('Prompt', foreign_keys=[proposed_solution_id], back_populates='solutions')
-    proposed_new_question = relationship('Prompt', foreign_keys=[proposed_new_question_id], back_populates='new_questions')
-    proposed_new_solution = relationship('Prompt', foreign_keys=[proposed_new_solution_id], back_populates='new_solutions')
-    
+    # Relationships
+    lecture = db.relationship('Lecture', back_populates='exercises')
+    proposed_solution = db.relationship(
+        'Prompt',
+        foreign_keys=[proposed_solution_id],
+        back_populates='solutions'
+    )
+    proposed_new_question = db.relationship(
+        'Prompt',
+        foreign_keys=[proposed_new_question_id],
+        back_populates='new_questions'
+    )
+    proposed_new_solution = db.relationship(
+        'Prompt',
+        foreign_keys=[proposed_new_solution_id],
+        back_populates='new_solutions'
+    )
+    fine_tunings = db.relationship('FineTuning', back_populates='exercise')
+
     def __repr__(self):
         if self.exercise_name:
             return f"{self.exercise_name}"

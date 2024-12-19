@@ -4,4 +4,12 @@
 
 {% block content %}
     <h1>Exercises</h1>
+    <ul class="selector">
+        {% for exercise in exercise_list %}
+            <li><a href="/exercise/{{exercise.exercise_id}}">{{exercise.lecture.course.course_name}} ({{exercise.lecture.course.course_year}}-{{exercise.lecture.course.semester.semester_name}}): Lecture #{{exercise.lecture.lecture_number}}: Exercise #{{exercise.exercise_number}}</a></li>
+        {% else %}
+            <li>No exercises found.</li>
+        {% endfor %}
+    </ul>
+</div>
 {% endblock %}

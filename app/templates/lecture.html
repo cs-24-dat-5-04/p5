@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+
+{% block title %}Lectures{% endblock %}
+
+{% block content %}
+    <h1>Lectures</h1>
+    <ul class="selector">
+        {% for lecture in lecture_list %}
+        <li><a href="/semester/{{lecture.course.semester.semester_id}}/course/{{lecture.course.course_id}}/lecture/{{lecture.lecture_id}}">Lecture #{{lecture.lecture_number}} in {{lecture.course.course_name}} ({{lecture.course.course_year}}-{{lecture.course.semester.semester_name}})</a></li>
+        {% else %}
+            <li>No lectures found.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

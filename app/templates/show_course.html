@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Course{% endblock %}
+{% block title %}Course {{course.course_name}}{% endblock %}
 
 {% block content %}
 <div class="centered">
@@ -9,21 +9,21 @@
         <a href="{{ url_for('show_course', semester_id=semester.semester_id, course_id=i.course_id) }}" class="course-card {% if course.course_id ==  i.course_id %}current-course{% endif %}">{{i.course_name}}</a>
     {% endfor %}
 </div>
-<h1>Lessons</h1>
+<h1>Lectures</h1>
 <div class="centered">
     <ol class="crud">
-        {% for lesson in lesson_list %}
-            <li data-item-id="{{ lesson.lesson_id }}" data-item-type="lesson">
-                <a class="name" title="View {{lesson}}" href="{{ url_for('show_lesson', semester_id=semester.semester_id, course_id=course.course_id, lesson_number=lesson.lesson_number) }}">
-                    {{lesson}}
+        {% for lecture in lecture_list %}
+            <li data-item-id="{{ lecture.lecture_id }}" data-item-type="lecture">
+                <a class="name" title="View {{lecture}}" href="{{ url_for('show_lecture', semester_id=semester.semester_id, course_id=course.course_id, lecture_number=lecture.lecture_number) }}">
+                    {{lecture}}
                 </a>
-                <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{lesson}}">edit</span></button>
-                <button onclick="deleteItem(event)"><span class="material-icons delete" title="Delete {{lesson}}">delete</span></button>
+                <button onclick="renameItem(event)"><span class="material-icons update" title="Rename {{lecture}}">edit</span></button>
+                <button onclick="deleteItem(event)"><span class="material-icons delete" title="Delete {{lecture}}">delete</span></button>
             </li>
         {% else %}
-            <li class="empty"><p>No lessons found.</p></li>
+            <li class="empty"><p>No lectures found.</p></li>
         {% endfor %}
-        <li class="create" title="Create lesson"><button onclick="createLesson('{{ course.course_id }}')"><span class="material-icons">add</span></button></li>
+        <li class="create" title="Create lecture"><button onclick="createLecture('{{ course.course_id }}')"><span class="material-icons">add</span></button></li>
     </ol>
 </div>
 

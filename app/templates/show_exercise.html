@@ -1,9 +1,20 @@
 {% extends "layout.html" %}
 
-{% block title %}Course{% endblock %}
+{% block title %}Exercise #{{exercise.exercise_number}}{% endblock %}
 
 {% block content %}
 <h1>{{ exercise }}</h1>
+<div class="centered">
+    <form class="exercise" action="/update_exercise_type/{{ exercise.exercise_id }}" method="POST">
+        <label for="exercise_type">Exercise type</label>
+        <select name="exercise_type" id="exercise_type" class="type-selector">
+            <option value="simple" {{ 'selected' if exercise.exercise_type == 'simple' }}>Simple</option>
+            <option value="advanced" {{ 'selected' if exercise.exercise_type == 'advanced' }}>Advanced</option>
+        </select>
+        <button type="submit">Save exercise type</button>
+    </form>
+</div>
+{% if exercise.exercise_type == 'simple' %}
 <div class="centered">
     <form class="exercise" action="/update_exercise/{{ exercise.exercise_id }}" method="POST">
         <label for="exercise_content">Question</label>
@@ -17,7 +28,7 @@
     <form class="proposal" action="/generate_proposed_solution" method="POST">
         <label for="exercise_solution">Proposed solution</label>
         <textarea class="{% if exercise.proposed_solution_validation == 1 %}valid{% endif %}{% if exercise.proposed_solution_validation == 0 %}invalid{% endif %}" readonly type="text" name="prompt_solution" rows="2" cols="50">{% if exercise.exercise_content is not none %}{{ exercise.proposed_solution_id | get_prompt_completion() }}{% endif %}</textarea>
-        <input type="hidden" name="system_prompt" value="{{ exercise.lesson_id | get_system_prompt_from_lesson() }}">
+        <input type="hidden" name="system_prompt" value="{{ exercise.lecture_id | get_system_prompt_from_lecture() }}">
         <input type="hidden" name="user_prompt" value="{% if exercise.exercise_content is not none %}{{ exercise.exercise_content }}{% endif %}">
         <input type="hidden" name="prompt_id" value="{% if exercise.proposed_solution_id is not none %}{{ exercise.proposed_solution_id }}{% endif %}">
         <input type="hidden" name="exercise_id" value="{{ exercise.exercise_id }}">
@@ -35,4 +46,81 @@
         <button type="submit"><span class="material-icons">bolt</span> Generate</button>
     </form>
 </div>
+{% endif %}
+{% if exercise.exercise_type == 'advanced' %}
+{% if prompts %}
+<div class="centered">
+    <div id="prompt-container">
+        <div id="prompt-header">
+            <button id="previous-prompt" onclick="decrementPrompt()">PREV</button>
+            <h3>Prompts <span id="prompt-counter">(1/50)</span></h3>
+            <button id="next-prompt" onclick="incrementPrompt()">NEXT</button>
+        </div>
+        <form action="/update_prompt" method="POST" id="current-prompt-form">
+            <label for="user-prompt">Question</label>
+            <textarea type="text"  name="user_prompt" id="user-prompt"></textarea>
+            <label for="user-prompt">Solution</label>
+            <textarea type="text"  name="assistant_prompt" id="assistant-prompt"></textarea>
+            <input type="hidden" name="prompt_id" id="prompt-id">
+            <input type="submit" value="Update prompt">
+        </form>
+    </div>
+</div>
+{% else %}
+    <em class="centered announcement">No prompts were found.</em>
+{% endif %}
+<h1>New prompt</h1>
+<div class="centered">
+    <form action="/create_prompt" method="POST" id="new-prompt">
+        <label for="user-prompt">Question</label>
+        <textarea type="text" name="user_prompt"></textarea>
+        <button type="submit">Create prompt</button>
+    </form>
+</div>
+
+<div class="centered">
+    <form class="proposal" action="/upload_fine_tuning_file/{{ exercise.exercise_id }}" method="POST" enctype="multipart/form-data">
+        <label for="file">Add Fine Tuning File</label>
+        <input type="file" id="file" name="file" required>
+        <button type="submit">Upload fine tuning file</button>
+        <a href="/export-prompts/{{exercise.exercise_id}}">Export prompts</a>
+    </form>
+</div>
+<div class="centered">
+    <form action="/finetune" method="post">
+        <input type="hidden" name="fine_tuning_id" id="fine-tuning-id" value="{{ fine_tuning.fine_tuning_id if fine_tuning }}">
+        <input type="submit" value="Fine tune exercise" onclick="alert('This may take a couple of minutes. If the browser is trying to refresh the page it means it is working!')">
+    </form>
+</div>
+{% endif %}
+
+
+<script>
+    const prompts = {{ prompts | tojson }};
+    let prompt_number = 1;
+
+    function incrementPrompt() {
+        if (prompt_number < prompts.length) {
+            prompt_number += 1;
+            updatePromptContent();
+        }
+    }
+
+    function decrementPrompt() {
+        if (prompt_number > 0) {
+            prompt_number -= 1;
+            updatePromptContent();
+        }
+    }
+
+    function updatePromptContent() {
+        document.getElementById('user-prompt').textContent = prompts[prompt_number-1].user_prompt;
+        document.getElementById('assistant-prompt').textContent = prompts[prompt_number-1].assistant_prompt;
+        document.getElementById('prompt-counter').textContent = `(${prompt_number}/${prompts.length})`;
+        document.getElementById('prompt-id').value = prompts[prompt_number-1].prompt_id;
+    }
+
+    updatePromptContent();
+</script>
+
 {% endblock %}

@@ -6,7 +6,7 @@
     <h1>Courses</h1>
     <ul class="selector">
         {% for course in course_list %}
-            <li>{{course[0].course_name}} ({{course[0].course_year}}-{{course[1].semester_name}})</li>
+            <li><a href="/semester/{{course.semester.semester_id}}/course/{{course.course_id}}">{{course.course_name}} ({{course.course_year}}-{{course.semester.semester_name}})</a></li>
         {% else %}
             <li>No courses found.</li>
         {% endfor %}

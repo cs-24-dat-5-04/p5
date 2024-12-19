@@ -1,12 +1,10 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey
-from sqlalchemy.orm import relationship, declarative_base
-from .base import Base
+from . import db
 
-class SystemPrompt(Base):
+class SystemPrompt(db.Model):
     __tablename__ = 'system_prompt'
     
-    system_prompt_id = Column(Integer, autoincrement=True, primary_key=True)
-    system_prompt = Column(nullable=False)
-    lesson_id = Column(Integer, ForeignKey('lesson.lesson_id'))
+    system_prompt_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
+    system_prompt = db.Column(db.Text, nullable=False)
+    lecture_id = db.Column(db.Integer, db.ForeignKey('lecture.lecture_id'))
     
-    lesson = relationship('Lesson', back_populates='system_prompt')
+    lecture = db.relationship('Lecture', back_populates='system_prompt')

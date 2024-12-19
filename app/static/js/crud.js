@@ -69,26 +69,26 @@ function createSemester(event) {
     });
 }
 
-function createExercise(lesson_id) {
-    const lesson = document.createElement('input');
-    lesson.name = 'lesson_id';
-    lesson.value = lesson_id;
+function createExercise(lecture_id) {
+    const lecture = document.createElement('input');
+    lecture.name = 'lecture_id';
+    lecture.value = lecture_id;
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = '/create_exercise';
-    form.appendChild(lesson);
+    form.appendChild(lecture);
     form.classList.add('hidden');
     document.body.appendChild(form);
     form.submit();
 }
 
-function createLesson(course_id) {
+function createLecture(course_id) {
     const course = document.createElement('input');
     course.name = 'course_id';
     course.value = course_id;
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/create_lesson';
+    form.action = '/create_lecture';
     form.appendChild(course);
     form.classList.add('hidden');
     document.body.appendChild(form);
