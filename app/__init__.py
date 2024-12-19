@@ -1,20 +1,16 @@
-import random
-import string
-import time
-from flask import Flask, Response, flash, jsonify, redirect, render_template, request
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, and_
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from flask import Flask, Response, flash, redirect, render_template, request
+from sqlalchemy import and_
 from app.forms.semester_form import SemesterForm
 from app.forms.course_form import CourseForm
 from werkzeug.utils import secure_filename
 from openai import OpenAI
-
 from app.models import db, Course, Exercise, FineTuning, Lecture, Prompt, Semester, SystemPrompt
-import json
 import sys
 import os
+import json
 import re
+import time
+
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 def create_app():
     app = Flask(__name__)
